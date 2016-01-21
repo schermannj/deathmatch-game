@@ -1,3 +1,6 @@
+var Room = require('./models/Room').Room;
+var Player = require('./models/Player').Player;
+
 var gameIo;
 var gameSocket;
 
@@ -12,9 +15,22 @@ module.exports = function (io, socket) {
     gameSocket.on('joinRoom', joinRoomEvent);
 };
 
-function createRoomEvent() {
+function createRoomEvent(data) {
     // Create a unique Socket.IO Room
     var roomId = ( Math.random() * 100000 ) | 0;
+
+    //TODO: refactor here. I get each time wrong model format...
+    //persist firstPlayer and room
+    var player = new Player({
+        name: data.username
+    });
+
+    player.save();
+
+    new Room({
+        roomId: roomId,
+        firstPlayer: player
+    }).save();
 
     // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
     this.emit('roomCreated', {roomId: roomId, socketId: this.id});
@@ -38,10 +54,27 @@ function joinRoomEvent(data) {
         // Join the room
         sock.join(data.roomId);
 
+        Room.findOne({roomId: data.roomId}, function (err, room, next) {
+            if (err) {
+                next(err);
+            }
+
+            var secondPlayer = new Player({name: data.username});
+            secondPlayer.save();
+
+            room.secondPlayer = secondPlayer;
+            room.save();
+
+            data.firstPlayer = room.firstPlayer;
+            data.secondPlayer = room.secondPlayer;
+
+            // Emit an event notifying the clients that the player has joined the room.
+            gameIo.sockets.in(data.roomId).emit('playerJoinedRoom', data);
+
+        });
+
         //TODO: here I should get first user from mongo and send it to second user; So next step is to design models and use mongo;
 
-        // Emit an event notifying the clients that the player has joined the room.
-        gameIo.sockets.in(data.roomId).emit('playerJoinedRoom', data);
 
     } else {
         // Otherwise, send an error message back to the player.
