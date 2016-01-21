@@ -12,11 +12,16 @@ function MainCtrl($state, socket) {
     vm.createRoom = createRoom;
     vm.joinRoom = joinRoom;
 
+    socket.io()
+        .on('roomCreated', function (resp) {
+            console.log("Room has been created. Data: " + resp);
+        });
+
     function joinRoom(roomId, username) {
-        socket.emit('joinRoom', {room: roomId, username: username})
+        socket.io().emit('joinRoom', {room: roomId, username: username})
     }
 
     function createRoom(username) {
-        socket.emit('createRoom', {username: username})
+        socket.io().emit('createRoom', {username: username})
     }
 }
