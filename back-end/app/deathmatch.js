@@ -38,6 +38,8 @@ function joinRoomEvent(data) {
         // Join the room
         sock.join(data.roomId);
 
+        //TODO: here I should get first user from mongo and send it to second user; So next step is to design models and use mongo;
+
         // Emit an event notifying the clients that the player has joined the room.
         gameIo.sockets.in(data.roomId).emit('playerJoinedRoom', data);
 
