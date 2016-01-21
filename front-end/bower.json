@@ -1,0 +1,30 @@
+{
+  "name": "front-end",
+  "version": "1.0.0",
+  "homepage": "https://github.com/schermannj/angularjs-gulp-nodejs-boilerplate",
+  "authors": [
+    "schermannj23@gmail.com"
+  ],
+  "description": "angularjs-gulp boilerplate",
+  "keywords": [
+    "AngularJS",
+    "Gulp",
+    "NodeJs",
+    "Boilerplate"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "angular": "~1.4.7",
+    "bootstrap": "~3.3.5",
+    "angular-bootstrap": "~0.14.3",
+    "angular-ui-router": "~0.2.15"
+  }
+}
