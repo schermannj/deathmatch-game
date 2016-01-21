@@ -23,20 +23,35 @@ function routes($stateProvider) {
     $stateProvider
         .state('main', {
             url: '/',
-            templateUrl: 'templates/main.html',
-            controller: 'MainCtrl',
-            controllerAs: 'vm'
+            templateUrl: 'templates/main.html'
         })
         .state('join', {
             url: '/join',
             templateUrl: 'templates/main_join.html',
-            controller: 'MainCtrl',
-            controllerAs: 'vm'
+            controllerAs: 'vm',
+            controller: 'JoinCtrl'
         })
         .state('create', {
             url: '/create',
             templateUrl: 'templates/main_create.html',
-            controller: 'MainCtrl',
-            controllerAs: 'vm'
+            controllerAs: 'vm',
+            controller: 'CreateCtrl'
+        })
+        .state('wait-for-player', {
+            url: '/wait/:roomId',
+            templateUrl: 'templates/wait_for_player.html',
+            controller: 'WaitForPlayerCtrl',
+            controllerAs: 'vm',
+            params: {
+                socketId: null
+            }
+        }).state('prepare-room', {
+            url: '/room/:roomId',
+            templateUrl: 'templates/prepare-room.html',
+            controller: 'PrepareRoomCtrl',
+            controllerAs: 'vm',
+            params: {
+                username: null
+            }
         });
 }

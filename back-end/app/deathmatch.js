@@ -28,7 +28,7 @@ function joinRoomEvent(data) {
     var sock = this;
 
     // Look up the room ID in the Socket.IO manager object.
-    var room = gameSocket.manager.rooms["/" + data.roomId];
+    var room = gameSocket.adapter.rooms[data.roomId];
 
     // If the room exists...
     if (room) {
