@@ -5,7 +5,8 @@
 'use strict';
 
 var app = angular.module('app', [
-        'ui.router'
+        'ui.router',
+        'app.config'
     ])
     .config(routerProvider)
     .config(routes);
@@ -23,6 +24,18 @@ function routes($stateProvider) {
         .state('main', {
             url: '/',
             templateUrl: 'templates/main.html',
+            controller: 'MainCtrl',
+            controllerAs: 'vm'
+        })
+        .state('join', {
+            url: '/join',
+            templateUrl: 'templates/main_join.html',
+            controller: 'MainCtrl',
+            controllerAs: 'vm'
+        })
+        .state('create', {
+            url: '/create',
+            templateUrl: 'templates/main_create.html',
             controller: 'MainCtrl',
             controllerAs: 'vm'
         });

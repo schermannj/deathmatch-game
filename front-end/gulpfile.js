@@ -14,9 +14,10 @@ gulp.task('css', function () {
 
 gulp.task('js', function () {
     var bF = gulp.src('./bower.json').pipe(mainBowerFiles());
+    var libF = gulp.src(['./bower_components/socket.io-client/socket.io.js']);
     var appF = gulp.src('./app/js/**/*.js').pipe(concat('app.js'));
 
-    return merge(bF, appF).pipe(gulp.dest('./target/js')).pipe(connect.reload());
+    return merge(bF, libF, appF).pipe(gulp.dest('./target/js')).pipe(connect.reload());
 });
 
 gulp.task('html', ['css', 'js'], function () {
