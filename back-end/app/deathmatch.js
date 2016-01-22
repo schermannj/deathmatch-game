@@ -19,6 +19,7 @@ function createRoomEvent(data) {
     var sock = this;
 
     new Game({
+        _id: uuid.v1({nsecs: 961}),
         players: {
             first: data.username
         },
