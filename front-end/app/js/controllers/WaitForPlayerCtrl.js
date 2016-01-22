@@ -11,7 +11,8 @@ function WaitForPlayerCtrl($state, socket) {
         .on('playerJoinedRoom', function (resp) {
             $state.go('prepare-room', {
                 game: resp.game,
-                opponent: resp.secondPlayer
+                opponent: resp.secondPlayer,
+                player: resp.firstPlayer
             });
         });
 }

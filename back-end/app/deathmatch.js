@@ -13,6 +13,7 @@ module.exports = function (io, socket) {
     //events
     gameSocket.on('createRoom', createRoomEvent);
     gameSocket.on('joinRoom', joinRoomEvent);
+    gameSocket.on('playerIsReady', playerIsReady);
 };
 
 function createRoomEvent(data) {
@@ -21,7 +22,11 @@ function createRoomEvent(data) {
     new Game({
         _id: uuid.v1({nsecs: 961}),
         players: {
-            first: data.username
+            first: {
+                name: data.username,
+                ready: false,
+                socket: sock.id
+            }
         },
         questions: [],
         level: data.level ? data.level : 1.
@@ -43,15 +48,16 @@ function joinRoomEvent(data) {
 
     // If the game exists...
     if (game) {
-        // attach the socket id to the data object.
-        //data.socketId = sock.id;
-
-        // Join the game
-        sock.join(data.game);
-
+        //TODO: add functional if I want to play alone
         Game.findOneAndUpdate(
             {_id: data.game, "players.second": {$exists: false}},
-            {$set: {"players.second": data.username}},
+            {
+                $set: {
+                    "players.second.name": data.username,
+                    "players.second.ready": false,
+                    "players.second.socket": sock.id
+                }
+            },
             {"new": true},
             function (err, updatedGame) {
                 if (err) {
@@ -59,15 +65,60 @@ function joinRoomEvent(data) {
                 }
 
                 delete data.username;
-                data.firstPlayer = updatedGame.players.first;
-                data.secondPlayer = updatedGame.players.second;
+                data.firstPlayer = updatedGame.players.first.name;
+                data.secondPlayer = updatedGame.players.second.name;
+
+                // Join the game
+                sock.join(data.game);
 
                 // Emit an event notifying the clients that the player has joined the game.
                 gameIo.sockets.in(data.game).emit('playerJoinedRoom', data);
-
             });
     } else {
         // Otherwise, send an error message back to the player.
         this.emit('error', {message: "This game does not exist."});
+    }
+}
+
+function playerIsReady(data) {
+    var sock = this;
+
+    Game.findOne({_id: data.game}, function (err, game) {
+        if (err) {
+            throw new Error("Can't find game");
+        }
+
+        var firstP = game.players.first;
+        var secondP = game.players.second;
+
+        switch (data.player) {
+            case firstP.name:
+                preparePlayersForTheBattle(firstP, secondP, game);
+                break;
+            case secondP.name:
+                preparePlayersForTheBattle(secondP, firstP, game);
+                break;
+            default:
+                throw new Error("Player not found!")
+        }
+    })
+}
+
+function preparePlayersForTheBattle(you, opponent, game) {
+    if (opponent.ready) {
+        //TODO: use here timer and emit it every second 3-2-1-emit start game
+        //gameIo.sockets.in(game._id).emit('startCountdown', data);
+        gameIo.sockets.in(game._id).emit('startTheBattle', data);
+    } else {
+        //TODO: fix save. It's not working now. Emit doesn't work too. I can't send message to opponent;
+        you.ready = true;
+
+        game.save(function (err, player) {
+            if(err) {
+                throw new Error("Can't save player");
+            }
+
+            gameIo.sockets.sockets[opponent.socket].emit('opponentIsReady', {lol: true});
+        });
     }
 }

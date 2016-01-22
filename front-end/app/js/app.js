@@ -48,7 +48,8 @@ function routes($stateProvider) {
             controller: 'PrepareRoomCtrl',
             controllerAs: 'vm',
             params: {
-                opponent: null
+                opponent: null,
+                player: null
             }
         });
 }

@@ -18,7 +18,8 @@ function JoinCtrl($state, socket) {
             .on('playerJoinedRoom', function (resp) {
                 $state.go('prepare-room', {
                     game: resp.game,
-                    opponent: resp.firstPlayer
+                    opponent: resp.firstPlayer,
+                    player: resp.secondPlayer
                 });
             });
     }
