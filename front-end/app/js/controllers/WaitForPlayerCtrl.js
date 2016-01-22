@@ -5,12 +5,13 @@ WaitForPlayerCtrl.$inject = ['$state', 'socket'];
 function WaitForPlayerCtrl($state, socket) {
     var vm = this;
 
-    vm.roomId = $state.params.roomId;
-
-    console.log($state.params);
+    vm.game = $state.params.game;
 
     socket.io()
         .on('playerJoinedRoom', function (resp) {
-            $state.go('prepare-room', resp);
+            $state.go('prepare-room', {
+                game: resp.game,
+                opponent: resp.secondPlayer
+            });
         });
 }

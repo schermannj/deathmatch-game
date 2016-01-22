@@ -5,8 +5,6 @@ PrepareRoomCtrl.$inject = ['$state', 'socket'];
 function PrepareRoomCtrl($state, socket) {
     var vm = this;
 
-    vm.roomId = $state.params.roomId;
-    vm.opponent = $state.params.username;
-
-    console.log($state.params);
+    vm.game = $state.params.game;
+    vm.opponent = $state.params.opponent;
 }

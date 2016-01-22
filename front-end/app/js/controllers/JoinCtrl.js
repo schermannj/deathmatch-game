@@ -11,12 +11,15 @@ function JoinCtrl($state, socket) {
 
     vm.joinRoom = joinRoom;
 
-    function joinRoom(roomId, username) {
-        socket.io().emit('joinRoom', {roomId: roomId, username: username});
+    function joinRoom(game, username) {
+        socket.io().emit('joinRoom', {game: game, username: username});
 
         socket.io()
             .on('playerJoinedRoom', function (resp) {
-                $state.go('prepare-room', resp);
+                $state.go('prepare-room', {
+                    game: resp.game,
+                    opponent: resp.firstPlayer
+                });
             });
     }
 }

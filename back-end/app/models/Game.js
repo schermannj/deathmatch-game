@@ -1,10 +1,12 @@
+var uuid = require('uuid');
 var mongoose = require('../components/mongoose'),
     Schema = mongoose.Schema;
 
 var schema = new Schema({
-    roomId: {
+    _id: {
         type: String,
-        required: true
+        required: true,
+        default: uuid.v1()
     },
     players: {
         type: Schema.Types.Mixed
