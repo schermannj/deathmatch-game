@@ -1,5 +1,4 @@
-var Room = require('./models/Room').Room;
-var Player = require('./models/Player').Player;
+var Game = require('./models/Game').Game;
 
 var gameIo;
 var gameSocket;
@@ -17,26 +16,23 @@ module.exports = function (io, socket) {
 
 function createRoomEvent(data) {
     // Create a unique Socket.IO Room
-    var roomId = ( Math.random() * 100000 ) | 0;
+    var roomId = (( Math.random() * 100000 ) | 0).toString();
 
-    //TODO: refactor here. I get each time wrong model format...
-    //persist firstPlayer and room
-    var player = new Player({
-        name: data.username
-    });
-
-    player.save();
-
-    new Room({
+    new Game({
         roomId: roomId,
-        firstPlayer: player
-    }).save();
+        players: {
+            first: data.username
+        },
+        questions: [],
+        level: data.level ? data.level : 1.
+    }).save(function (err, game) {
+            // Join the Room and wait for the players
+            this.join(roomId);
 
-    // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
-    this.emit('roomCreated', {roomId: roomId, socketId: this.id});
-
-    // Join the Room and wait for the players
-    this.join(roomId.toString());
+            // Return the Room ID (gameId) and the socket ID (mySocketId) to the browser client
+            this.emit('roomCreated', {roomId: roomId, socketId: this.id, game: game._id});
+        }
+    );
 }
 
 function joinRoomEvent(data) {

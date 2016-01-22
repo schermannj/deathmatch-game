@@ -3,13 +3,20 @@ var mongoose = require('../components/mongoose'),
 
 var schema = new Schema({
     roomId: {
-        type: Number,
+        type: String,
         required: true
     },
-    firstPlayer: {
+    players: {
         type: Schema.Types.Mixed
     },
-    secondPlayer: {
+    questions: {
+        type: [Number],
+        required: false //TODO: change on true
+    },
+    level: {
+        type: Number
+    },
+    winner: {
         type: Schema.Types.Mixed
     },
     created: {
@@ -18,4 +25,4 @@ var schema = new Schema({
     }
 });
 
-exports.Room = mongoose.model('Room', schema);
+exports.Game = mongoose.model('Game', schema);
