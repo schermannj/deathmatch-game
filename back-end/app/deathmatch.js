@@ -110,15 +110,15 @@ function preparePlayersForTheBattle(you, opponent, game) {
         //gameIo.sockets.in(game._id).emit('startCountdown', data);
         gameIo.sockets.in(game._id).emit('startTheBattle', data);
     } else {
-        //TODO: fix save. It's not working now. Emit doesn't work too. I can't send message to opponent;
+        //TODO: fix save. It's not working now.
         you.ready = true;
 
-        game.save(function (err, player) {
+        game.save(function (err, savedGame) {
             if(err) {
-                throw new Error("Can't save player");
+                throw new Error("Can't save game");
             }
 
-            gameIo.sockets.sockets[opponent.socket].emit('opponentIsReady', {lol: true});
+            gameIo.sockets.in(savedGame._id).sockets[opponent.socket].emit('opponentIsReady');
         });
     }
 }
