@@ -20,7 +20,7 @@ function PrepareRoomCtrl($state, socket) {
         })
         .on('startTheBattle', function (resp) {
 
-            $('.container').append('<h3>Game will start in 3...2...1...Go</h3>')
+            $('.container').append('<h3>Game will start in ' + resp.count + ' !</h3>')
         });
 
     function ready() {

@@ -104,8 +104,12 @@ function preparePlayersForTheBattle(you, opponent, game) {
     if (opponent.ready) {
         updateReadyPlayerCondition(game, you.name, function () {
 
-            //TODO: use here timer and emit it every second 3-2-1-emit start game
-            //gameIo.sockets.in(game._id).emit('startCountdown', data);
+            //TODO: fix this shit!
+            for (var count = 3; count <= 0; count--) {
+                setInterval(function () {
+                    gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
+                }, 1000);
+            }
 
             gameIo.sockets.in(game._id).emit('startTheBattle', {
                 gameStarted: true
