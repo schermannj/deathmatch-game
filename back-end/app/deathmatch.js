@@ -1,5 +1,6 @@
 var uuid = require('uuid');
 var Game = require('./models/Game').Game;
+var _ = require('underscore');
 
 var gameIo;
 var gameSocket;
@@ -81,8 +82,6 @@ function joinRoomEvent(data) {
 }
 
 function playerIsReady(data) {
-    var sock = this;
-
     Game.findOne({_id: data.game}, function (err, game) {
         if (err) {
             throw new Error("Can't find game");
@@ -91,34 +90,42 @@ function playerIsReady(data) {
         var firstP = game.players.first;
         var secondP = game.players.second;
 
-        switch (data.player) {
-            case firstP.name:
-                preparePlayersForTheBattle(firstP, secondP, game);
-                break;
-            case secondP.name:
-                preparePlayersForTheBattle(secondP, firstP, game);
-                break;
-            default:
-                throw new Error("Player not found!")
+        if (firstP.name == data.player) {
+            preparePlayersForTheBattle(firstP, secondP, game);
+        } else if (secondP.name == data.player) {
+            preparePlayersForTheBattle(secondP, firstP, game);
+        } else {
+            throw new Error("Player not found!")
         }
     })
 }
 
 function preparePlayersForTheBattle(you, opponent, game) {
     if (opponent.ready) {
-        //TODO: use here timer and emit it every second 3-2-1-emit start game
-        //gameIo.sockets.in(game._id).emit('startCountdown', data);
-        gameIo.sockets.in(game._id).emit('startTheBattle', data);
-    } else {
-        //TODO: fix save. It's not working now.
-        you.ready = true;
+        updateReadyPlayerCondition(game, you.name, function () {
 
-        game.save(function (err, savedGame) {
-            if(err) {
-                throw new Error("Can't save game");
-            }
+            //TODO: use here timer and emit it every second 3-2-1-emit start game
+            //gameIo.sockets.in(game._id).emit('startCountdown', data);
 
-            gameIo.sockets.in(savedGame._id).sockets[opponent.socket].emit('opponentIsReady');
+            gameIo.sockets.in(game._id).emit('startTheBattle', {
+                gameStarted: true
+            });
         });
+    } else {
+        updateReadyPlayerCondition(game, you.name, function () {
+            gameIo.sockets.in(game._id).sockets[opponent.socket].emit('opponentIsReady');
+        });
+    }
+}
+
+function updateReadyPlayerCondition(game, playerName, callback) {
+    Game.update({_id: game._id}, {$set: getReadyPlayerCondition(playerName, game.players)}, callback)
+}
+
+function getReadyPlayerCondition(readyPlayer, players) {
+    if (players.first.name == readyPlayer) {
+        return {"players.first.ready": true}
+    } else if (players.second.name == readyPlayer) {
+        return {"players.second.ready": true}
     }
 }
