@@ -16,6 +16,8 @@ module.exports = function (io, socket) {
     gameSocket.on('createRoom', createRoomEvent);
     gameSocket.on('joinRoom', joinRoomEvent);
     gameSocket.on('playerIsReady', playerIsReady);
+    gameSocket.on('answer', doAnswer);
+    gameSocket.on('getQuestion', getQuestion);
 };
 
 function createRoomEvent(data) {
@@ -82,6 +84,14 @@ function joinRoomEvent(data) {
     }
 }
 
+function doAnswer() {
+
+}
+
+function getQuestion(game, qIndex) {
+    //TODO: get game object and return question by qIndex
+}
+
 function playerIsReady(data) {
     Game.findOne({_id: data.game}, function (err, game) {
         if (err) {
@@ -105,10 +115,10 @@ function preparePlayersForTheBattle(you, opponent, game) {
     if (opponent.ready) {
         updateReadyPlayerCondition(game, you.name, function () {
 
+            //TODO: fill out the game object with questions
+
             startCountdown(game).then(function () {
-                gameIo.sockets.in(game._id).emit('startTheBattle', {
-                    gameStarted: true
-                });
+                gameIo.sockets.in(game._id).emit('startTheBattle');
             })
         });
     } else {

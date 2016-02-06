@@ -10,8 +10,7 @@ var schema = new Schema({
         type: Schema.Types.Mixed
     },
     questions: {
-        type: [Number],
-        required: false //TODO: change on true
+        type: [Schema.Types.Mixed]
     },
     level: {
         type: Number

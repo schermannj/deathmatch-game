@@ -1,0 +1,13 @@
+<div class="container">
+    <h1>Play here</h1>
+    <h3>Your name is {{vm.player}}</h3>
+    <h3>Your score is {{vm.score}}</h3>
+    <hr/>
+    <fieldset>
+        <legend>{{vm.question}}</legend>
+        <label ng-repeat="possibleAnswer in vm.possibleAnswers">
+            <input type="radio" name="answer-{{a}}"> {{possibleAnswer}}
+        </label>
+        <button ng-click="vm.doAnswer()">Answer</button>
+    </fieldset>
+</div>

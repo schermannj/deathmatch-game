@@ -13,18 +13,19 @@ function PrepareRoomCtrl($state, socket) {
 
     socket.io()
         .on('opponentIsReady', function () {
-            $('.container').append('<h3>Your opponent is ready</h3>')
+            $('.container').append('<h3>Your opponent is ready!</h3>')
         })
         .on('startCountdown', function (resp) {
             $('.container').append('<h3>Game will start in ' + resp.counter + ' !</h3>')
         })
-        .on('startTheBattle', function (resp) {
-            $('.container').append('<h3>Game has been started: ' + resp.gameStarted + '</h3>')
+        .on('startTheBattle', function () {
+            $state.go('game', {
+                player: vm.player,
+                game: vm.game
+            })
         });
 
     function ready() {
         socket.io().emit('playerIsReady', {game: vm.game, player: vm.player});
     }
-
-
 }
