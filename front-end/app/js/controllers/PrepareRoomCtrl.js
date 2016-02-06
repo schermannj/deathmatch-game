@@ -16,11 +16,10 @@ function PrepareRoomCtrl($state, socket) {
             $('.container').append('<h3>Your opponent is ready</h3>')
         })
         .on('startCountdown', function (resp) {
-            console.log(resp)
+            $('.container').append('<h3>Game will start in ' + resp.counter + ' !</h3>')
         })
         .on('startTheBattle', function (resp) {
-
-            $('.container').append('<h3>Game will start in ' + resp.count + ' !</h3>')
+            $('.container').append('<h3>Game has been started: ' + resp.gameStarted + '</h3>')
         });
 
     function ready() {

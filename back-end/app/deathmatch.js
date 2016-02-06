@@ -1,6 +1,7 @@
 var uuid = require('uuid');
 var Game = require('./models/Game').Game;
 var _ = require('underscore');
+var q = require('q');
 
 var gameIo;
 var gameSocket;
@@ -104,22 +105,37 @@ function preparePlayersForTheBattle(you, opponent, game) {
     if (opponent.ready) {
         updateReadyPlayerCondition(game, you.name, function () {
 
-            //TODO: fix this shit!
-            for (var count = 3; count <= 0; count--) {
-                setInterval(function () {
-                    gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
-                }, 1000);
-            }
-
-            gameIo.sockets.in(game._id).emit('startTheBattle', {
-                gameStarted: true
-            });
+            startCountdown(game).then(function () {
+                gameIo.sockets.in(game._id).emit('startTheBattle', {
+                    gameStarted: true
+                });
+            })
         });
     } else {
         updateReadyPlayerCondition(game, you.name, function () {
             gameIo.sockets.in(game._id).sockets[opponent.socket].emit('opponentIsReady');
         });
     }
+}
+
+function startCountdown(game) {
+    var deferred = q.defer();
+
+    var count = 3;
+
+    setTimeout(function countdown() {
+        gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
+
+        count--;
+
+        if(count > 0) {
+            setTimeout(countdown, 1000);
+        } else {
+            deferred.resolve();
+        }
+    }, 1000);
+
+    return deferred.promise;
 }
 
 function updateReadyPlayerCondition(game, playerName, callback) {
