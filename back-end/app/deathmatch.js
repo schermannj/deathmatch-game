@@ -109,11 +109,16 @@ function getQuestion(req) {
                 throw new Error("Can't find question");
             }
 
+            var startScore = 60000;
+
             gameIo.sockets.in(game._id).sockets[req.pSocket].emit('receiveQuestion', {
                 _id: question._id,
                 question: question.question,
-                possibleAnswers: question.possibleAnswers
+                possibleAnswers: question.possibleAnswers,
+                score: startScore
             });
+
+            startScoreCountdown(game._id, req.pSocket, startScore);
         })
     })
 }
@@ -182,6 +187,22 @@ function startCountdown(game) {
     }, 1000);
 
     return deferred.promise;
+}
+
+function startScoreCountdown(game, pSocket, score) {
+    setTimeout(function countdown() {
+        score = score - 100;
+
+        //TODO: stop in some way scoreCountdown after player has been pressed 'Answer' and store score somewhere;
+
+        gameIo.sockets.in(game).sockets[pSocket].emit('scoreCountdown', {
+            score: score
+        });
+
+        if (score > 0) {
+            setTimeout(countdown, 100);
+        }
+    }, 100);
 }
 
 function updateReadyPlayerCondition(game, playerName, callback) {

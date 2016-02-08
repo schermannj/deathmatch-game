@@ -23,7 +23,13 @@ function GameCtrl($state, socket, $scope) {
             $scope.$apply(function () {
                 vm.question = resp.question;
                 vm.possibleAnswers = resp.possibleAnswers;
+                vm.score = resp.score;
                 vm.qIndex++;
+            });
+        })
+        .on('scoreCountdown', function (resp) {
+            $scope.$apply(function () {
+               vm.score = resp.score;
             });
         });
 
