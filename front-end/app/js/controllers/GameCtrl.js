@@ -36,3 +36,8 @@ function GameCtrl($state, socket) {
         });
     }
 }
+
+
+//$("input[name*=radio-choice-]:checked").each(function() {
+//    alert($(this).val());
+//});

@@ -1,5 +1,6 @@
 var uuid = require('uuid');
 var Game = require('./models/Game').Game;
+var Question = require('./models/Question').Question;
 var _ = require('underscore');
 var q = require('q');
 
@@ -22,6 +23,9 @@ module.exports = function (io, socket) {
 
 function createRoomEvent(data) {
     var sock = this;
+
+    //mongodb questions dump
+    //mongoQuestionsDump();
 
     new Game({
         _id: uuid.v1({nsecs: 961}),
@@ -115,11 +119,21 @@ function preparePlayersForTheBattle(you, opponent, game) {
     if (opponent.ready) {
         updateReadyPlayerCondition(game, you.name, function () {
 
-            //TODO: fill out the game object with questions
+            loadQuestionsForGame(game.level).then(function (questions) {
+                Game.findOneAndUpdate(
+                    {_id: game._id},
+                    {$set: {questions: get5RandomQuestionsIds(questions)}},
+                    function (err, game) {
+                        if (err != null) {
+                            throw new Error("Can't start game. Cause: " + err);
+                        }
 
-            startCountdown(game).then(function () {
-                gameIo.sockets.in(game._id).emit('startTheBattle');
-            })
+                        startCountdown(game).then(function () {
+                            gameIo.sockets.in(game._id).emit('startTheBattle');
+                        });
+                    }
+                );
+            });
         });
     } else {
         updateReadyPlayerCondition(game, you.name, function () {
@@ -138,7 +152,7 @@ function startCountdown(game) {
 
         count--;
 
-        if(count > 0) {
+        if (count > 0) {
             setTimeout(countdown, 1000);
         } else {
             deferred.resolve();
@@ -158,4 +172,94 @@ function getReadyPlayerCondition(readyPlayer, players) {
     } else if (players.second.name == readyPlayer) {
         return {"players.second.ready": true}
     }
+}
+
+function loadQuestionsForGame(level) {
+    var deferred = q.defer();
+
+    Question.find({level: level}, function (err, questions) {
+        if (err) {
+            throw new Error("Can't find questions. Cause: " + err);
+        }
+
+        deferred.resolve(questions);
+    });
+
+    return deferred.promise;
+}
+
+function get5RandomQuestionsIds(questions) {
+    if (questions.length <= 5) {
+
+        return _.map(questions, function (q) {
+            return q._id;
+        });
+
+    } else {
+
+        var randomQuestions = [];
+        var max = questions.length;
+
+        while (randomQuestions.length < 5) {
+            var rIndex = Math.floor(Math.random() * (max + 1));
+            var rQuestionId = questions[rIndex]._id;
+            var found = false;
+
+            for (var i = 0; i < randomQuestions.length; i++) {
+                if (randomQuestions[i]._id == rQuestionId) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                randomQuestions.push(rQuestionId);
+            }
+        }
+
+        return randomQuestions;
+    }
+}
+
+function mongoQuestionsDump() {
+    new Question({
+        _id: uuid.v1({nsecs: 961}),
+        question: "What is JVM ?",
+        possibleAnswers: [
+            {1: "A Java virtual machine (JVM) is a process virtual machine that can execute Java bytecode."},
+            {2: "Something else"},
+            {3: "Zalupa konskaya"},
+            {4: "STH"}
+        ],
+        rightAnswer: 1,
+        tags: ["general"],
+        level: 1
+    }).save();
+
+    new Question({
+        _id: uuid.v1({nsecs: 961}),
+        question: "What are the Data Types supported by Java ?",
+        possibleAnswers: [
+            {1: "byte, short, int, long"},
+            {2: "double, float, boolean"},
+            {3: "integer, var, val"},
+            {4: "byte, short, char, int, long, float, double, boolean"}
+        ],
+        rightAnswer: 4,
+        tags: ["general"],
+        level: 1
+    }).save();
+
+    new Question({
+        _id: uuid.v1({nsecs: 961}),
+        question: "What are the basic interface of Java Collections Framework ?",
+        possibleAnswers: [
+            {1: "HashMap"},
+            {2: "Collection"},
+            {3: "ArrayList"},
+            {4: "Array"}
+        ],
+        rightAnswer: 2,
+        tags: ["general"],
+        level: 1
+    }).save();
 }
