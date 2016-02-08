@@ -73,8 +73,8 @@ function joinRoomEvent(data) {
                 }
 
                 delete data.username;
-                data.firstPlayer = updatedGame.players.first.name;
-                data.secondPlayer = updatedGame.players.second.name;
+                data.firstPlayer = updatedGame.players.first;
+                data.secondPlayer = updatedGame.players.second;
 
                 // Join the game
                 sock.join(data.game);
@@ -92,8 +92,30 @@ function doAnswer() {
 
 }
 
-function getQuestion(game, qIndex) {
-    //TODO: get game object and return question by qIndex
+function getQuestion(req) {
+    Game.findOne({_id: req.game}, function (err, game) {
+        if (err) {
+            throw new Error("Can't find game");
+        }
+
+        if (game != null && req.qIndex < game.questions.length) {
+            var qId = game.questions[req.qIndex];
+        } else {
+            throw new Error("Wrong qIndex: " + req.qIndex);
+        }
+
+        Question.findOne({_id: qId}, function (err, question) {
+            if (err) {
+                throw new Error("Can't find question");
+            }
+
+            gameIo.sockets.in(game._id).sockets[req.pSocket].emit('receiveQuestion', {
+                _id: question._id,
+                question: question.question,
+                possibleAnswers: question.possibleAnswers
+            });
+        })
+    })
 }
 
 function playerIsReady(data) {

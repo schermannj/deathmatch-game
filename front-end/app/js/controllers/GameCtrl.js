@@ -1,8 +1,8 @@
 app.controller('GameCtrl', GameCtrl);
 
-GameCtrl.$inject = ['$state', 'socket'];
+GameCtrl.$inject = ['$state', 'socket', '$scope'];
 
-function GameCtrl($state, socket) {
+function GameCtrl($state, socket, $scope) {
     var vm = this;
 
     vm.game = $state.params.game;
@@ -20,9 +20,11 @@ function GameCtrl($state, socket) {
             console.log(resp);
         })
         .on('receiveQuestion', function (resp) {
-            vm.question = resp.question;
-            vm.possibleAnswers = resp.possibleAnswers;
-            vm.qIndex++;
+            $scope.$apply(function () {
+                vm.question = resp.question;
+                vm.possibleAnswers = resp.possibleAnswers;
+                vm.qIndex++;
+            });
         });
 
     function doAnswer(answer) {
@@ -32,6 +34,7 @@ function GameCtrl($state, socket) {
     function getQuestion() {
         socket.io().emit('getQuestion', {
             game: vm.game,
+            pSocket: vm.player.socket,
             qIndex: vm.qIndex
         });
     }

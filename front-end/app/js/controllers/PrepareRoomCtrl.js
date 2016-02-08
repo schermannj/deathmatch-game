@@ -26,6 +26,6 @@ function PrepareRoomCtrl($state, socket) {
         });
 
     function ready() {
-        socket.io().emit('playerIsReady', {game: vm.game, player: vm.player});
+        socket.io().emit('playerIsReady', {game: vm.game, player: vm.player.name});
     }
 }
