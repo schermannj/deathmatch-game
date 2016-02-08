@@ -18,6 +18,7 @@ function GameCtrl($state, socket, $scope) {
     socket.io()
         .on('answerAccepted', function (resp) {
             console.log(resp);
+            //TODO: update view
         })
         .on('receiveQuestion', function (resp) {
             $scope.$apply(function () {
@@ -34,7 +35,13 @@ function GameCtrl($state, socket, $scope) {
         });
 
     function doAnswer(answer) {
-        socket.io().emit('answer', {});
+        socket.io().emit('answer', {
+            pSocket: vm.player.socket,
+            game: vm.game,
+            qIndex: vm.qIndex,
+            qId: vm.question._id,
+            answer: answer
+        });
     }
 
     function getQuestion() {

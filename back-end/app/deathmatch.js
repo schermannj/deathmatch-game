@@ -7,6 +7,8 @@ var q = require('q');
 var gameIo;
 var gameSocket;
 
+var pSocketsScoreMap = {};
+
 module.exports = function (io, socket) {
     gameIo = io;
     gameSocket = socket;
@@ -88,8 +90,40 @@ function joinRoomEvent(data) {
     }
 }
 
-function doAnswer() {
+function doAnswer(req) {
+    pSocketsScoreMap[req.pSocket].inAction = false;
 
+    var pScore = pSocketsScoreMap[req.pSocket].score;
+    var isCorrect = false;
+
+    Question.findOne({_id: req.qId}, function (err, question) {
+        if (err) {
+            throw new Error("Can't find question. Cause: " + err);
+        }
+
+        if (question.rightAnswer == req.answer) {
+            isCorrect = true;
+        } else {
+            pScore = 0;
+        }
+
+        Game.findOne({_id: req.game}, function (err, game) {
+            if (err) {
+                throw new Error("Can't find game. Cause: " + err);
+            }
+
+            //TODO: determine which of players score should be updated
+
+        });
+
+        gameIo.sockets.in(req.game).sockets[req.pSocket].emit('answerAccepted', {
+            score: pScore,
+            isCorrect: isCorrect
+        });
+
+        //TODO: save score progress to mongo
+        //TODO: and then set to zero  pSocketsScoreMap[req.pSocket].score
+    });
 }
 
 function getQuestion(req) {
@@ -118,9 +152,17 @@ function getQuestion(req) {
                 score: startScore
             });
 
+            putScoreToMap(req.pSocket, startScore);
             startScoreCountdown(game._id, req.pSocket, startScore);
         })
     })
+}
+
+function putScoreToMap(pSocket, score) {
+    pSocketsScoreMap[pSocket] = {
+        score: score,
+        inAction: true
+    }
 }
 
 function playerIsReady(data) {
@@ -193,14 +235,14 @@ function startScoreCountdown(game, pSocket, score) {
     setTimeout(function countdown() {
         score = score - 100;
 
-        //TODO: stop in some way scoreCountdown after player has been pressed 'Answer' and store score somewhere;
-
         gameIo.sockets.in(game).sockets[pSocket].emit('scoreCountdown', {
             score: score
         });
 
-        if (score > 0) {
+        if (score > 0 && pSocketsScoreMap[pSocket].inAction) {
             setTimeout(countdown, 100);
+        } else {
+            pSocketsScoreMap[pSocket].score = score;
         }
     }, 100);
 }
