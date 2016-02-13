@@ -6,7 +6,7 @@
     <fieldset>
         <legend>{{vm.question}}</legend>
         <label ng-repeat="possibleAnswer in vm.possibleAnswers">
-            <input type="radio" name="answer-{{a}}"> {{possibleAnswer}}
+            <input type="radio" name="answer-{{possibleAnswer}}" value="Object.keys(possibleAnswer)[0]" zalupa1="{{Object.keys(possibleAnswer)}}" zalupa2="{{Object.keys(possibleAnswer)[0]}}"> {{possibleAnswer}}
         </label>
         <button ng-click="vm.doAnswer()">Answer</button>
     </fieldset>

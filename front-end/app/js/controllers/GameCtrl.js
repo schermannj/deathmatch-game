@@ -23,6 +23,7 @@ function GameCtrl($state, socket, $scope) {
         .on('receiveQuestion', function (resp) {
             $scope.$apply(function () {
                 vm.question = resp.question;
+                vm.qId = resp._id;
                 vm.possibleAnswers = resp.possibleAnswers;
                 vm.score = resp.score;
                 vm.qIndex++;
@@ -34,12 +35,18 @@ function GameCtrl($state, socket, $scope) {
             });
         });
 
-    function doAnswer(answer) {
+    function doAnswer() {
+        //TODO: fix here and decide where should i get answer from!
+        var answer = $("input[name*=answer-]:checked").attr('value');
+
         socket.io().emit('answer', {
-            pSocket: vm.player.socket,
+            player: {
+                _id: vm.player._id,
+                socket: vm.player.socket
+            },
             game: vm.game,
             qIndex: vm.qIndex,
-            qId: vm.question._id,
+            qId: vm.qId,
             answer: answer
         });
     }
@@ -52,8 +59,3 @@ function GameCtrl($state, socket, $scope) {
         });
     }
 }
-
-
-//$("input[name*=radio-choice-]:checked").each(function() {
-//    alert($(this).val());
-//});

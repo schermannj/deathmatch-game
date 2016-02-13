@@ -113,9 +113,9 @@ function joinRoomEvent(data) {
 }
 
 function doAnswer(req) {
-    pSocketsScoreMap[req.pSocket].inAction = false;
+    pSocketsScoreMap[req.player.socket].inAction = false;
 
-    var pScore = pSocketsScoreMap[req.pSocket].score;
+    var pScore = pSocketsScoreMap[req.player.socket].score;
     var isCorrect = false;
 
     Question.findOne({_id: req.qId}, function (err, question) {
@@ -129,22 +129,18 @@ function doAnswer(req) {
             pScore = 0;
         }
 
-        Game.findOne({_id: req.game}, function (err, game) {
+        Player.update({_id: req.player._id}, {$set: {score: pScore}}, function (err, player) {
             if (err) {
-                throw new Error("Can't find game. Cause: " + err);
+                throw new Error("Can't find player. Cause: " + err);
             }
 
-            //TODO: determine which of players score should be updated
+            pSocketsScoreMap[req.player.socket].score = 0;
 
+            gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
+                score: pScore,
+                isCorrect: isCorrect
+            });
         });
-
-        gameIo.sockets.in(req.game).sockets[req.pSocket].emit('answerAccepted', {
-            score: pScore,
-            isCorrect: isCorrect
-        });
-
-        //TODO: save score progress to mongo
-        //TODO: and then set to zero  pSocketsScoreMap[req.pSocket].score
     });
 }
 
