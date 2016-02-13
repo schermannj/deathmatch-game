@@ -1,6 +1,7 @@
 var uuid = require('uuid');
 var Game = require('./models/Game').Game;
 var Question = require('./models/Question').Question;
+var Player = require('./models/Player').Player;
 var _ = require('underscore');
 var q = require('q');
 
@@ -29,24 +30,27 @@ function createRoomEvent(data) {
     //mongodb questions dump
     //mongoQuestionsDump();
 
-    new Game({
+    new Player({
         _id: uuid.v1({nsecs: 961}),
-        players: {
-            first: {
-                name: data.username,
-                ready: false,
-                socket: sock.id
+        name: data.username,
+        ready: false,
+        socket: sock.id
+    }).save(function (err, player) {
+        new Game({
+            _id: uuid.v1({nsecs: 961}),
+            players: [
+                player._id
+            ],
+            questions: [],
+            level: data.level ? data.level : 1.
+        }).save(function (err, game) {
+                // Join the Game and wait for the players
+                sock.join(game._id);
+                // Return the Game ID (gameId)
+                sock.emit('roomCreated', {socketId: sock.id, game: game._id});
             }
-        },
-        questions: [],
-        level: data.level ? data.level : 1.
-    }).save(function (err, game) {
-            // Join the Game and wait for the players
-            sock.join(game._id);
-            // Return the Game ID (gameId)
-            sock.emit('roomCreated', {socketId: this.id, game: game._id});
-        }
-    );
+        );
+    });
 }
 
 function joinRoomEvent(data) {
@@ -58,32 +62,50 @@ function joinRoomEvent(data) {
 
     // If the game exists...
     if (game) {
-        //TODO: add functional if I want to play alone
-        Game.findOneAndUpdate(
-            {_id: data.game, "players.second": {$exists: false}},
-            {
-                $set: {
-                    "players.second.name": data.username,
-                    "players.second.ready": false,
-                    "players.second.socket": sock.id
-                }
-            },
-            {"new": true},
-            function (err, updatedGame) {
-                if (err) {
-                    throw new Error("Can't find game");
-                }
 
-                delete data.username;
-                data.firstPlayer = updatedGame.players.first;
-                data.secondPlayer = updatedGame.players.second;
+        new Player({
+            _id: uuid.v1({nsecs: 961}),
+            name: data.username,
+            ready: false,
+            socket: sock.id
+        }).save(function (err, secondP) {
 
-                // Join the game
-                sock.join(data.game);
+            Game.findOneAndUpdate(
+                {_id: data.game},
+                {
+                    $push: {players: secondP._id}
+                },
+                {"new": true},
+                function (err, updatedGame) {
+                    if (err) {
+                        throw new Error("Can't find game");
+                    }
 
-                // Emit an event notifying the clients that the player has joined the game.
-                gameIo.sockets.in(data.game).emit('playerJoinedRoom', data);
-            });
+                    //TODO: fix here if you want to play alone or with more than 2 players;
+
+                    delete data.username;
+                    data.secondPlayer = {
+                        _id: secondP._id,
+                        name: secondP.name,
+                        socket: secondP.socket,
+                        ready: secondP.ready
+                    };
+
+                    Player.findOne({_id: updatedGame.players[0]}, function (err, firstP) {
+                        if (err) {
+                            throw new Error("Can't find player. Cause: " + err);
+                        }
+
+                        data.firstPlayer = firstP;
+
+                        // Join the game
+                        sock.join(data.game);
+
+                        // Emit an event notifying the clients that the player has joined the game.
+                        gameIo.sockets.in(data.game).emit('playerJoinedRoom', data);
+                    });
+                });
+        });
     } else {
         // Otherwise, send an error message back to the player.
         this.emit('error', {message: "This game does not exist."});
@@ -171,12 +193,12 @@ function playerIsReady(data) {
             throw new Error("Can't find game");
         }
 
-        var firstP = game.players.first;
-        var secondP = game.players.second;
+        var firstP = game.players[0];
+        var secondP = game.players[1];
 
-        if (firstP.name == data.player) {
+        if (firstP == data.player) {
             preparePlayersForTheBattle(firstP, secondP, game);
-        } else if (secondP.name == data.player) {
+        } else if (secondP == data.player) {
             preparePlayersForTheBattle(secondP, firstP, game);
         } else {
             throw new Error("Player not found!")
@@ -184,31 +206,37 @@ function playerIsReady(data) {
     })
 }
 
-function preparePlayersForTheBattle(you, opponent, game) {
-    if (opponent.ready) {
-        updateReadyPlayerCondition(game, you.name, function () {
+function preparePlayersForTheBattle(yourId, opponentId, game) {
+    Player.findOne({_id: opponentId}, function (err, opponent) {
+        if (err) {
+            throw new Error("Can't find player. Cause: " + err);
+        }
 
-            loadQuestionsForGame(game.level).then(function (questions) {
-                Game.findOneAndUpdate(
-                    {_id: game._id},
-                    {$set: {questions: get5RandomQuestionsIds(questions)}},
-                    function (err, game) {
-                        if (err != null) {
-                            throw new Error("Can't start game. Cause: " + err);
+        if (opponent.ready) {
+            updateReadyPlayerCondition(yourId, function () {
+
+                loadQuestionsForGame(game.level).then(function (questions) {
+                    Game.findOneAndUpdate(
+                        {_id: game._id},
+                        {$set: {questions: get5RandomQuestionsIds(questions)}},
+                        function (err, game) {
+                            if (err != null) {
+                                throw new Error("Can't start game. Cause: " + err);
+                            }
+
+                            startCountdown(game).then(function () {
+                                gameIo.sockets.in(game._id).emit('startTheBattle');
+                            });
                         }
-
-                        startCountdown(game).then(function () {
-                            gameIo.sockets.in(game._id).emit('startTheBattle');
-                        });
-                    }
-                );
+                    );
+                });
             });
-        });
-    } else {
-        updateReadyPlayerCondition(game, you.name, function () {
-            gameIo.sockets.in(game._id).sockets[opponent.socket].emit('opponentIsReady');
-        });
-    }
+        } else {
+            updateReadyPlayerCondition(yourId, function () {
+                gameIo.sockets.in(game._id).sockets[opponent.socket].emit('opponentIsReady');
+            });
+        }
+    });
 }
 
 function startCountdown(game) {
@@ -247,16 +275,8 @@ function startScoreCountdown(game, pSocket, score) {
     }, 100);
 }
 
-function updateReadyPlayerCondition(game, playerName, callback) {
-    Game.update({_id: game._id}, {$set: getReadyPlayerCondition(playerName, game.players)}, callback)
-}
-
-function getReadyPlayerCondition(readyPlayer, players) {
-    if (players.first.name == readyPlayer) {
-        return {"players.first.ready": true}
-    } else if (players.second.name == readyPlayer) {
-        return {"players.second.ready": true}
-    }
+function updateReadyPlayerCondition(playerId, callback) {
+    Player.update({_id: playerId}, {$set: {ready: true}}, callback);
 }
 
 function loadQuestionsForGame(level) {

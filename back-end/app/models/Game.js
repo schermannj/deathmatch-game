@@ -7,7 +7,7 @@ var schema = new Schema({
         required: true
     },
     players: {
-        type: Schema.Types.Mixed
+        type: [String]
     },
     questions: {
         type: [String]
@@ -16,7 +16,7 @@ var schema = new Schema({
         type: Number
     },
     winner: {
-        type: Schema.Types.Mixed
+        type: String
     },
     created: {
         type: Date,
