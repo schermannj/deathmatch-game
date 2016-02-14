@@ -34,7 +34,8 @@ function createRoomEvent(data) {
         _id: uuid.v1({nsecs: 961}),
         name: data.username,
         ready: false,
-        socket: sock.id
+        socket: sock.id,
+        score: 0
     }).save(function (err, player) {
         validate(err, "Can't save player.");
 
@@ -70,7 +71,8 @@ function joinRoomEvent(data) {
             _id: uuid.v1({nsecs: 961}),
             name: data.username,
             ready: false,
-            socket: sock.id
+            socket: sock.id,
+            score: 0
         }).save(function (err, secondP) {
             validate(err, "Can't save player.");
 
@@ -118,10 +120,12 @@ function doAnswer(req) {
     var pScore = pSocketsScoreMap[req.player.socket].score;
     var isCorrect = false;
 
-    Question.findOne({_id: req.qId}, function (err, question) {
+    Question.findOne({_id: req.q._id}, function (err, question) {
         validate(err, "Can't find question.");
 
-        if (question.rightAnswer == req.answer) {
+        var intersectionAnswers = _.intersection(question.rightAnswers, req.q.answer);
+
+        if (question.rightAnswers.length == intersectionAnswers.length) {
             isCorrect = true;
         } else {
             pScore = 0;
@@ -133,7 +137,7 @@ function doAnswer(req) {
             pSocketsScoreMap[req.player.socket].score = 0;
 
             gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
-                score: pScore,
+                totalScore: pScore,
                 isCorrect: isCorrect
             });
         });
@@ -163,7 +167,8 @@ function getQuestion(req) {
                     question: question.question,
                     possibleAnswers: question.possibleAnswers,
                     qScore: startScore,
-                    totalScore: player.score
+                    totalScore: player.score,
+                    isRadio: question.isRadio
                 });
 
                 putScoreToMap(req.pSocket, startScore);

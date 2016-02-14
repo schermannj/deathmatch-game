@@ -50,8 +50,7 @@ function GameCtrl($state, socket, $scope) {
             },
             game: vm.game,
             q: {
-                _id: vm.qId,
-                index: vm.qIndex,
+                _id: vm.q.id,
                 answer: answer
             }
         });
