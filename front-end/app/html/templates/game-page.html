@@ -1,13 +1,17 @@
 <div class="container">
     <h1>Play here</h1>
     <h3>Your name is {{vm.player.name}}</h3>
-    <h3>Your score is {{vm.score}}</h3>
+    <h3>Your total score is {{vm.totalScore}}</h3>
+    <h3>Your score for this question is {{vm.qScore}}</h3>
     <hr/>
     <fieldset>
-        <legend>{{vm.question}}</legend>
-        <label ng-repeat="possibleAnswer in vm.possibleAnswers">
-            <input type="radio" name="answer-{{possibleAnswer}}" value="Object.keys(possibleAnswer)[0]" zalupa1="{{Object.keys(possibleAnswer)}}" zalupa2="{{Object.keys(possibleAnswer)[0]}}"> {{possibleAnswer}}
+        <legend>{{vm.q.text}}</legend>
+        <label ng-repeat="possibleAnswer in vm.q.possibleAnswer">
+            <input ng-if="vm.q.isRadio" type="radio" name="answer-{{possibleAnswer}}" value="2"> {{possibleAnswer}}
+            <input ng-if="!vm.q.isRadio" type="checkbox" name="answer-{{possibleAnswer}}" value="1"> {{possibleAnswer}}
         </label>
         <button ng-click="vm.doAnswer()">Answer</button>
     </fieldset>
 </div>
+
+<!--Object.keys(possibleAnswer)[0]-->

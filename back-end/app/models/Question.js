@@ -14,8 +14,12 @@ var schema = new Schema({
         type: [Schema.Types.Mixed],
         required: true
     },
-    rightAnswer: {
-        type: Number
+    rightAnswers: {
+        type: [Number]
+    },
+    isRadio: {
+      type: Boolean,
+        required: true
     },
     tags: {
         type: [String]

@@ -22,16 +22,20 @@ function GameCtrl($state, socket, $scope) {
         })
         .on('receiveQuestion', function (resp) {
             $scope.$apply(function () {
-                vm.question = resp.question;
-                vm.qId = resp._id;
-                vm.possibleAnswers = resp.possibleAnswers;
-                vm.score = resp.score;
+                vm.q = {
+                    id: resp._id,
+                    text: resp.question,
+                    possibleAnswers: resp.possibleAnswers,
+                    isRadio: resp.isRadio
+                };
+                vm.qScore = resp.qScore;
+                vm.totalScore = resp.totalScore;
                 vm.qIndex++;
             });
         })
         .on('scoreCountdown', function (resp) {
             $scope.$apply(function () {
-               vm.score = resp.score;
+                vm.qScore = resp.score;
             });
         });
 
@@ -45,9 +49,11 @@ function GameCtrl($state, socket, $scope) {
                 socket: vm.player.socket
             },
             game: vm.game,
-            qIndex: vm.qIndex,
-            qId: vm.qId,
-            answer: answer
+            q: {
+                _id: vm.qId,
+                index: vm.qIndex,
+                answer: answer
+            }
         });
     }
 
@@ -55,6 +61,7 @@ function GameCtrl($state, socket, $scope) {
         socket.io().emit('getQuestion', {
             game: vm.game,
             pSocket: vm.player.socket,
+            pId: vm.player._id,
             qIndex: vm.qIndex
         });
     }

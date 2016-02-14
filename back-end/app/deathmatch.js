@@ -36,14 +36,17 @@ function createRoomEvent(data) {
         ready: false,
         socket: sock.id
     }).save(function (err, player) {
+        validate(err, "Can't save player.");
+
         new Game({
             _id: uuid.v1({nsecs: 961}),
             players: [
                 player._id
             ],
             questions: [],
-            level: data.level ? data.level : 1.
+            level: data.level ? data.level : 1
         }).save(function (err, game) {
+                validate(err, "Can't save game.");
                 // Join the Game and wait for the players
                 sock.join(game._id);
                 // Return the Game ID (gameId)
@@ -69,6 +72,7 @@ function joinRoomEvent(data) {
             ready: false,
             socket: sock.id
         }).save(function (err, secondP) {
+            validate(err, "Can't save player.");
 
             Game.findOneAndUpdate(
                 {_id: data.game},
@@ -77,9 +81,7 @@ function joinRoomEvent(data) {
                 },
                 {"new": true},
                 function (err, updatedGame) {
-                    if (err) {
-                        throw new Error("Can't find game");
-                    }
+                    validate(err, "Can't find game.");
 
                     //TODO: fix here if you want to play alone or with more than 2 players;
 
@@ -92,9 +94,7 @@ function joinRoomEvent(data) {
                     };
 
                     Player.findOne({_id: updatedGame.players[0]}, function (err, firstP) {
-                        if (err) {
-                            throw new Error("Can't find player. Cause: " + err);
-                        }
+                        validate(err, "Can't find player.");
 
                         data.firstPlayer = firstP;
 
@@ -119,9 +119,7 @@ function doAnswer(req) {
     var isCorrect = false;
 
     Question.findOne({_id: req.qId}, function (err, question) {
-        if (err) {
-            throw new Error("Can't find question. Cause: " + err);
-        }
+        validate(err, "Can't find question.");
 
         if (question.rightAnswer == req.answer) {
             isCorrect = true;
@@ -130,9 +128,7 @@ function doAnswer(req) {
         }
 
         Player.update({_id: req.player._id}, {$set: {score: pScore}}, function (err, player) {
-            if (err) {
-                throw new Error("Can't find player. Cause: " + err);
-            }
+            validate(err, "Can't find player.");
 
             pSocketsScoreMap[req.player.socket].score = 0;
 
@@ -146,9 +142,7 @@ function doAnswer(req) {
 
 function getQuestion(req) {
     Game.findOne({_id: req.game}, function (err, game) {
-        if (err) {
-            throw new Error("Can't find game");
-        }
+        validate(err, "Can't find game.");
 
         if (game != null && req.qIndex < game.questions.length) {
             var qId = game.questions[req.qIndex];
@@ -157,21 +151,24 @@ function getQuestion(req) {
         }
 
         Question.findOne({_id: qId}, function (err, question) {
-            if (err) {
-                throw new Error("Can't find question");
-            }
+            validate(err, "Can't find question.");
 
             var startScore = 60000;
 
-            gameIo.sockets.in(game._id).sockets[req.pSocket].emit('receiveQuestion', {
-                _id: question._id,
-                question: question.question,
-                possibleAnswers: question.possibleAnswers,
-                score: startScore
-            });
+            Player.findOne({_id: req.pId}, function (err, player) {
+                validate(err, "Can't find player.");
 
-            putScoreToMap(req.pSocket, startScore);
-            startScoreCountdown(game._id, req.pSocket, startScore);
+                gameIo.sockets.in(game._id).sockets[req.pSocket].emit('receiveQuestion', {
+                    _id: question._id,
+                    question: question.question,
+                    possibleAnswers: question.possibleAnswers,
+                    qScore: startScore,
+                    totalScore: player.score
+                });
+
+                putScoreToMap(req.pSocket, startScore);
+                startScoreCountdown(game._id, req.pSocket, startScore);
+            });
         })
     })
 }
@@ -185,9 +182,7 @@ function putScoreToMap(pSocket, score) {
 
 function playerIsReady(data) {
     Game.findOne({_id: data.game}, function (err, game) {
-        if (err) {
-            throw new Error("Can't find game");
-        }
+        validate(err, "Can't find game.");
 
         var firstP = game.players[0];
         var secondP = game.players[1];
@@ -204,9 +199,7 @@ function playerIsReady(data) {
 
 function preparePlayersForTheBattle(yourId, opponentId, game) {
     Player.findOne({_id: opponentId}, function (err, opponent) {
-        if (err) {
-            throw new Error("Can't find player. Cause: " + err);
-        }
+        validate(err, "Can't find player.");
 
         if (opponent.ready) {
             updateReadyPlayerCondition(yourId, function () {
@@ -216,9 +209,7 @@ function preparePlayersForTheBattle(yourId, opponentId, game) {
                         {_id: game._id},
                         {$set: {questions: get5RandomQuestionsIds(questions)}},
                         function (err, game) {
-                            if (err != null) {
-                                throw new Error("Can't start game. Cause: " + err);
-                            }
+                            validate(err, "Can't find game.");
 
                             startCountdown(game).then(function () {
                                 gameIo.sockets.in(game._id).emit('startTheBattle');
@@ -279,9 +270,7 @@ function loadQuestionsForGame(level) {
     var deferred = q.defer();
 
     Question.find({level: level}, function (err, questions) {
-        if (err) {
-            throw new Error("Can't find questions. Cause: " + err);
-        }
+        validate(err, "Can't find question.");
 
         deferred.resolve(questions);
     });
@@ -331,7 +320,8 @@ function mongoQuestionsDump() {
             {3: "Zalupa konskaya"},
             {4: "STH"}
         ],
-        rightAnswer: 1,
+        isRadio: true,
+        rightAnswers: [1],
         tags: ["general"],
         level: 1
     }).save();
@@ -345,7 +335,8 @@ function mongoQuestionsDump() {
             {3: "integer, var, val"},
             {4: "byte, short, char, int, long, float, double, boolean"}
         ],
-        rightAnswer: 4,
+        isRadio: true,
+        rightAnswers: [4],
         tags: ["general"],
         level: 1
     }).save();
@@ -359,8 +350,15 @@ function mongoQuestionsDump() {
             {3: "ArrayList"},
             {4: "Array"}
         ],
-        rightAnswer: 2,
+        isRadio: true,
+        rightAnswers: [2],
         tags: ["general"],
         level: 1
     }).save();
+}
+
+function validate(err, message) {
+    if (err) {
+        throw new Error(message.concat("Cause: " + err))
+    }
 }
