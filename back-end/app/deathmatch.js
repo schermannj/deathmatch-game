@@ -131,7 +131,7 @@ function answerEvent(req) {
     Question.findOne({_id: req.q._id}, function (err, question) {
         validate(err, "Can't find question.");
 
-        var answersIntersection = _.intersection(question.rightAnswers, parseInt(req.q.answer));
+        var answersIntersection = _.intersection(question.rightAnswers, req.q.answer);
 
         if (question.rightAnswers.length == answersIntersection.length) {
             isCorrect = true;

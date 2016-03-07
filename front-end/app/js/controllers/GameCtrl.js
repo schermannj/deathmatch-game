@@ -48,8 +48,11 @@ function GameCtrl($state, socket, $scope, $uibModal) {
         });
 
     function doAnswer() {
-        //TODO: fix here and decide where should i get answer from!
-        var answer = $("input[name*=answer-]:checked").attr('value');
+        var answer = [];
+        //TODO: fix it
+        $("input[name*=answer-]:checked").attr('value').forEach(function (item) {
+            answer.push(parseInt(item));
+        });
 
         socket.io().emit('answer', {
             game: vm.game,
