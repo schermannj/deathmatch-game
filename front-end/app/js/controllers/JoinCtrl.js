@@ -12,7 +12,7 @@ function JoinCtrl($state, socket) {
     vm.joinRoom = joinRoom;
 
     socket.io()
-        .on('updateRoom', function (resp) {
+        .on('playerJoined', function (resp) {
             $state.go('wait-for-player', resp);
         });
 

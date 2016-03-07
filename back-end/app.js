@@ -6,8 +6,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var cors = require('cors');
 
-var mainController = require('./app/controllers/main');
-
 var app = express();
 
 // uncomment after placing your favicon in /public
@@ -17,8 +15,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', mainController);
 
 app.use(cors({
   origin: 'http://localhost:8888',

@@ -48,12 +48,12 @@ function routes($stateProvider) {
             }
         })
         .state('game', {
+            url: '/game/:game',
             templateUrl: 'templates/game-page.html',
             controller: 'GameCtrl',
             controllerAs: 'vm',
             params: {
-                player: null,
-                game: null
+                player: null
             }
         });
 }

@@ -20,6 +20,7 @@ module.exports = function (io, socket) {
     gameSocket.on('createRoom', createRoomEvent);
     gameSocket.on('joinRoom', joinRoomEvent);
     gameSocket.on('playerIsReady', playerIsReadyEvent);
+    gameSocket.on('refreshRoom', refreshRoom);
     gameSocket.on('answer', answerEvent);
     gameSocket.on('getQuestion', getQuestionEvent);
     gameSocket.on('allPlayersAreReady', allPlayersAreReady);
@@ -35,6 +36,7 @@ function createRoomEvent(data) {
         _id: uuid.v1({nsecs: 961}),
         name: data.username,
         ready: false,
+        isAdmin: true,
         socket: sock.id,
         score: 0
     }).save(function (err, player) {
@@ -53,12 +55,9 @@ function createRoomEvent(data) {
                 // Join the Game and wait for the players
                 sock.join(game._id);
 
-                getPlayers(game).then(function (players) {
-                    sock.emit('roomCreated', {
-                        game: game._id,
-                        players: players,
-                        you: player
-                    });
+                sock.emit('roomCreated', {
+                    game: game._id,
+                    you: player
                 });
             }
         );
@@ -93,6 +92,7 @@ function joinRoomEvent(data) {
             _id: uuid.v1({nsecs: 961}),
             name: data.username,
             ready: false,
+            isAdmin: false,
             socket: sock.id,
             score: 0
         }).save(function (err, nextPlayer) {
@@ -110,15 +110,9 @@ function joinRoomEvent(data) {
                     // Join the game
                     sock.join(data.game);
 
-                    getPlayers(game).then(function (players) {
-                        validate(err, "Can't find players.");
-
-                        // Emit an event notifying the clients that the player has joined the game.
-                        gameIo.sockets.in(data.game).emit('updateRoom', {
-                            game: game._id,
-                            players: players,
-                            you: nextPlayer
-                        });
+                    gameIo.sockets.in(data.game).emit('playerJoined', {
+                        game: game._id,
+                        you: nextPlayer
                     });
                 });
         });
@@ -197,6 +191,21 @@ function putScoreToMap(pSocket, score) {
         score: score,
         inAction: true
     }
+}
+
+function refreshRoom(req) {
+    Game.findOne({_id: req.game}, function (err, game) {
+        validate(err, "Can't find game.");
+
+        getPlayers(game).then(function (players) {
+            validate(err, "Can't find players.");
+
+            gameIo.sockets.in(req.game).emit('updateRoom', {
+                game: game._id,
+                players: players
+            });
+        });
+    });
 }
 
 function playerIsReadyEvent(data) {

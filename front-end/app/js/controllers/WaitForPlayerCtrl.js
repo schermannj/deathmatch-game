@@ -7,7 +7,9 @@ function WaitForPlayerCtrl($state, socket, $scope) {
 
     vm.game = $state.params.game;
     vm.you = $state.params.you;
-    vm.players = $state.params.players;
+    vm.players = [];
+
+    refreshRoom();
 
     vm.doReady = doReady;
 
@@ -17,7 +19,9 @@ function WaitForPlayerCtrl($state, socket, $scope) {
                 vm.players = resp.players;
             });
 
-            checkIfAllPlayersAreReady();
+            if (vm.you.isAdmin) {
+                checkIfAllPlayersAreReady();
+            }
         })
         .on('startCountdown', function (resp) {
             $('.container').append('<h3>Game will start in ' + resp.counter + ' !</h3>')
@@ -30,7 +34,6 @@ function WaitForPlayerCtrl($state, socket, $scope) {
         });
 
 
-
     function checkIfAllPlayersAreReady() {
         var allAreReady = _.where(vm.players, {ready: false}).length == 0;
 
@@ -41,5 +44,9 @@ function WaitForPlayerCtrl($state, socket, $scope) {
 
     function doReady() {
         socket.io().emit('playerIsReady', {game: vm.game, player: vm.you});
+    }
+
+    function refreshRoom() {
+        socket.io().emit('refreshRoom', {game: vm.game});
     }
 }
