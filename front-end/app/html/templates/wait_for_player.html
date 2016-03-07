@@ -2,7 +2,13 @@
     <div class="bg-primary">
         Game id is:
         <input class="text-danger input-lg" type="text" ng-model="vm.game"/>
-        Send it to your opponent!
+        Send it to your opponents, {{vm.you.name}}!
+        <button class="btn btn-success" ng-click="vm.doReady()">I'm ready!</button>
     </div>
-    <b>Waiting for another player...</b>
+    <table class="table table-hover">
+        <tr  ng-repeat="player in vm.players" ng-class="{'success': player.ready}">
+            <td>{{$index}}</td>
+            <td>{{player.name}}</td>
+        </tr>
+    </table>
 </div>

@@ -12,12 +12,8 @@ function JoinCtrl($state, socket) {
     vm.joinRoom = joinRoom;
 
     socket.io()
-        .on('playerJoinedRoom', function (resp) {
-            $state.go('prepare-room', {
-                game: resp.game,
-                opponent: resp.firstPlayer,
-                player: resp.secondPlayer
-            });
+        .on('updateRoom', function (resp) {
+            $state.go('wait-for-player', resp);
         });
 
     function joinRoom(game, username) {

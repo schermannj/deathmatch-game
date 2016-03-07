@@ -19,9 +19,10 @@ module.exports = function (io, socket) {
     //events
     gameSocket.on('createRoom', createRoomEvent);
     gameSocket.on('joinRoom', joinRoomEvent);
-    gameSocket.on('playerIsReady', playerIsReady);
-    gameSocket.on('answer', doAnswer);
-    gameSocket.on('getQuestion', getQuestion);
+    gameSocket.on('playerIsReady', playerIsReadyEvent);
+    gameSocket.on('answer', answerEvent);
+    gameSocket.on('getQuestion', getQuestionEvent);
+    gameSocket.on('allPlayersAreReady', allPlayersAreReady);
 };
 
 function createRoomEvent(data) {
@@ -48,13 +49,33 @@ function createRoomEvent(data) {
             level: data.level ? data.level : 1
         }).save(function (err, game) {
                 validate(err, "Can't save game.");
+
                 // Join the Game and wait for the players
                 sock.join(game._id);
-                // Return the Game ID (gameId)
-                sock.emit('roomCreated', {socketId: sock.id, game: game._id});
+
+                getPlayers(game).then(function (players) {
+                    sock.emit('roomCreated', {
+                        game: game._id,
+                        players: players,
+                        you: player
+                    });
+                });
             }
         );
     });
+}
+
+function getPlayers(game) {
+    var deferred = q.defer();
+
+    Player.find({_id: {$in: game.players}}, function (err, players) {
+        validate(err, "Can't find player.");
+        if (err) deferred.reject(err);
+
+        deferred.resolve(players);
+    });
+
+    return deferred.promise;
 }
 
 function joinRoomEvent(data) {
@@ -67,44 +88,37 @@ function joinRoomEvent(data) {
     // If the game exists...
     if (game) {
 
+        //create new player
         new Player({
             _id: uuid.v1({nsecs: 961}),
             name: data.username,
             ready: false,
             socket: sock.id,
             score: 0
-        }).save(function (err, secondP) {
+        }).save(function (err, nextPlayer) {
             validate(err, "Can't save player.");
 
             Game.findOneAndUpdate(
                 {_id: data.game},
                 {
-                    $push: {players: secondP._id}
+                    $push: {players: nextPlayer._id}
                 },
                 {"new": true},
-                function (err, updatedGame) {
+                function (err, game) {
                     validate(err, "Can't find game.");
 
-                    //TODO: fix here if you want to play alone or with more than 2 players;
+                    // Join the game
+                    sock.join(data.game);
 
-                    delete data.username;
-                    data.secondPlayer = {
-                        _id: secondP._id,
-                        name: secondP.name,
-                        socket: secondP.socket,
-                        ready: secondP.ready
-                    };
-
-                    Player.findOne({_id: updatedGame.players[0]}, function (err, firstP) {
-                        validate(err, "Can't find player.");
-
-                        data.firstPlayer = firstP;
-
-                        // Join the game
-                        sock.join(data.game);
+                    getPlayers(game).then(function (players) {
+                        validate(err, "Can't find players.");
 
                         // Emit an event notifying the clients that the player has joined the game.
-                        gameIo.sockets.in(data.game).emit('playerJoinedRoom', data);
+                        gameIo.sockets.in(data.game).emit('updateRoom', {
+                            game: game._id,
+                            players: players,
+                            you: nextPlayer
+                        });
                     });
                 });
         });
@@ -114,7 +128,7 @@ function joinRoomEvent(data) {
     }
 }
 
-function doAnswer(req) {
+function answerEvent(req) {
     pSocketsScoreMap[req.player.socket].inAction = false;
 
     var pScore = pSocketsScoreMap[req.player.socket].score;
@@ -144,7 +158,7 @@ function doAnswer(req) {
     });
 }
 
-function getQuestion(req) {
+function getQuestionEvent(req) {
     Game.findOne({_id: req.game}, function (err, game) {
         validate(err, "Can't find game.");
 
@@ -185,49 +199,36 @@ function putScoreToMap(pSocket, score) {
     }
 }
 
-function playerIsReady(data) {
+function playerIsReadyEvent(data) {
     Game.findOne({_id: data.game}, function (err, game) {
         validate(err, "Can't find game.");
 
-        var firstP = game.players[0];
-        var secondP = game.players[1];
+        if (_.contains(game.players, data.player._id)) {
+            Player.findOneAndUpdate({_id: data.player._id}, {$set: {ready: true}}, function (err, player) {
+                validate(err, "Can't find player.");
 
-        if (firstP == data.player) {
-            preparePlayersForTheBattle(firstP, secondP, game);
-        } else if (secondP == data.player) {
-            preparePlayersForTheBattle(secondP, firstP, game);
-        } else {
-            throw new Error("Player not found!")
+                getPlayers(game).then(function (players) {
+                    gameIo.sockets.in(game._id).emit('updateRoom', {players: players});
+                });
+            });
         }
     })
 }
 
-function preparePlayersForTheBattle(yourId, opponentId, game) {
-    Player.findOne({_id: opponentId}, function (err, opponent) {
-        validate(err, "Can't find player.");
+function allPlayersAreReady(data) {
+    //TODO: fix level
+    loadQuestionsForGame(1).then(function (questions) {
+        Game.findOneAndUpdate(
+            {_id: data.game},
+            {$set: {questions: get5RandomQuestionsIds(questions)}},
+            function (err, game) {
+                validate(err, "Can't find game.");
 
-        if (opponent.ready) {
-            updateReadyPlayerCondition(yourId, function () {
-
-                loadQuestionsForGame(game.level).then(function (questions) {
-                    Game.findOneAndUpdate(
-                        {_id: game._id},
-                        {$set: {questions: get5RandomQuestionsIds(questions)}},
-                        function (err, game) {
-                            validate(err, "Can't find game.");
-
-                            startCountdown(game).then(function () {
-                                gameIo.sockets.in(game._id).emit('startTheBattle');
-                            });
-                        }
-                    );
+                startCountdown(game).then(function () {
+                    gameIo.sockets.in(game._id).emit('startTheBattle');
                 });
-            });
-        } else {
-            updateReadyPlayerCondition(yourId, function () {
-                gameIo.sockets.in(game._id).sockets[opponent.socket].emit('opponentIsReady');
-            });
-        }
+            }
+        );
     });
 }
 

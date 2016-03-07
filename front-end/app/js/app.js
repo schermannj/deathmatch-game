@@ -41,16 +41,10 @@ function routes($stateProvider) {
             url: '/wait/:game',
             templateUrl: 'templates/wait_for_player.html',
             controller: 'WaitForPlayerCtrl',
-            controllerAs: 'vm'
-        })
-        .state('prepare-room', {
-            url: '/room/:game',
-            templateUrl: 'templates/prepare-room.html',
-            controller: 'PrepareRoomCtrl',
             controllerAs: 'vm',
             params: {
-                opponent: null,
-                player: null
+                players: [],
+                you: null
             }
         })
         .state('game', {
