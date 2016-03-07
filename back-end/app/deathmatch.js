@@ -30,7 +30,7 @@ function createRoomEvent(data) {
     var sock = this;
 
     //mongodb questions dump
-    //mongoQuestionsDump();
+    mongoQuestionsDump();
 
     new Player({
         _id: uuid.v1({nsecs: 961}),
@@ -131,9 +131,9 @@ function answerEvent(req) {
     Question.findOne({_id: req.q._id}, function (err, question) {
         validate(err, "Can't find question.");
 
-        var intersectionAnswers = _.intersection(question.rightAnswers, req.q.answer);
+        var answersIntersection = _.intersection(question.rightAnswers, parseInt(req.q.answer));
 
-        if (question.rightAnswers.length == intersectionAnswers.length) {
+        if (question.rightAnswers.length == answersIntersection.length) {
             isCorrect = true;
         } else {
             pScore = 0;
@@ -167,20 +167,22 @@ function getQuestionEvent(req) {
 
             var startScore = 60000;
 
-            Player.findOne({_id: req.pId}, function (err, player) {
+            Player.findOne({_id: req.player._id}, function (err, player) {
                 validate(err, "Can't find player.");
 
-                gameIo.sockets.in(game._id).sockets[req.pSocket].emit('receiveQuestion', {
-                    _id: question._id,
-                    question: question.question,
-                    possibleAnswers: question.possibleAnswers,
+                gameIo.sockets.in(game._id).sockets[player.socket].emit('receiveQuestion', {
+                    question: {
+                        id: question._id,
+                        text: question.question,
+                        possibleAnswers: question.possibleAnswers,
+                        isRadio: question.isRadio
+                    },
                     qScore: startScore,
-                    totalScore: player.score,
-                    isRadio: question.isRadio
+                    totalScore: player.score
                 });
 
-                putScoreToMap(req.pSocket, startScore);
-                startScoreCountdown(game._id, req.pSocket, startScore);
+                putScoreToMap(player.socket, startScore);
+                startScoreCountdown(game._id, player.socket, startScore);
             });
         })
     })
@@ -330,10 +332,10 @@ function mongoQuestionsDump() {
         _id: uuid.v1({nsecs: 961}),
         question: "What is JVM ?",
         possibleAnswers: [
-            {1: "A Java virtual machine (JVM) is a process virtual machine that can execute Java bytecode."},
-            {2: "Something else"},
-            {3: "Zalupa konskaya"},
-            {4: "STH"}
+            {index: 1, text: "A Java virtual machine (JVM) is a process virtual machine that can execute Java bytecode."},
+            {index: 2, text: "Something else"},
+            {index: 3, text: "Zalupa konskaya"},
+            {index: 4, text: "STH"}
         ],
         isRadio: true,
         rightAnswers: [1],
@@ -345,10 +347,10 @@ function mongoQuestionsDump() {
         _id: uuid.v1({nsecs: 961}),
         question: "What are the Data Types supported by Java ?",
         possibleAnswers: [
-            {1: "byte, short, int, long"},
-            {2: "double, float, boolean"},
-            {3: "integer, var, val"},
-            {4: "byte, short, char, int, long, float, double, boolean"}
+            {index: 1, text: "byte, short, int, long"},
+            {index: 2, text: "double, float, boolean"},
+            {index: 3, text: "integer, var, val"},
+            {index: 4, text: "byte, short, char, int, long, float, double, boolean"}
         ],
         isRadio: true,
         rightAnswers: [4],
@@ -360,10 +362,10 @@ function mongoQuestionsDump() {
         _id: uuid.v1({nsecs: 961}),
         question: "What are the basic interface of Java Collections Framework ?",
         possibleAnswers: [
-            {1: "HashMap"},
-            {2: "Collection"},
-            {3: "ArrayList"},
-            {4: "Array"}
+            {index: 1, text: "HashMap"},
+            {index: 1, text: "Collection"},
+            {index: 1, text: "ArrayList"},
+            {index: 1, text: "Array"}
         ],
         isRadio: true,
         rightAnswers: [2],

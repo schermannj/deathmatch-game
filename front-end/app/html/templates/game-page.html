@@ -7,12 +7,10 @@
     <fieldset>
         <legend>{{vm.q.text}}</legend>
         <label ng-repeat="possibleAnswer in vm.q.possibleAnswers">
-            <input ng-if="vm.q.isRadio" type="radio" name="answer-{{possibleAnswer}}" value="{{2 + 2}}"> {{possibleAnswer}}
-            <input ng-if="!vm.q.isRadio" type="checkbox" name="answer-{{possibleAnswer}}" value="2"> {{possibleAnswer}}
+            <input ng-if="vm.q.isRadio" type="radio" name="answer-{{possibleAnswer.index}}" value="{{possibleAnswer.index}}"> {{possibleAnswer.text}}
+            <input ng-if="!vm.q.isRadio" type="checkbox" name="answer-{{possibleAnswer.index}}" value="{{possibleAnswer.index}}"> {{possibleAnswer.text}}
         </label>
         <button ng-click="vm.doAnswer()">Answer</button>
     </fieldset>
 
 </div>
-
-<!--Object.keys(possibleAnswer)[0]-->

@@ -1,12 +1,13 @@
 app.controller('GameCtrl', GameCtrl);
 
-GameCtrl.$inject = ['$state', 'socket', '$scope'];
+GameCtrl.$inject = ['$state', 'socket', '$scope', '$modal'];
 
-function GameCtrl($state, socket, $scope) {
+function GameCtrl($state, socket, $scope, $uibModal) {
     var vm = this;
 
     vm.game = $state.params.game;
-    vm.player = $state.params.player;
+    vm.you = $state.params.player;
+
     vm.score = 0;
     vm.time = 0;
     vm.qIndex = 0;
@@ -17,17 +18,24 @@ function GameCtrl($state, socket, $scope) {
 
     socket.io()
         .on('answerAccepted', function (resp) {
-            console.log(resp);
-            //TODO: update view
+            var modal = $uibModal.open({
+                templateUrl: 'templates/answer.modal.html',
+                controller: 'AnswerModalInstanceCtrl',
+                controllerAs: 'vm',
+                size: 'sm',
+                resolve: {
+                    totalScore: resp.totalScore,
+                    isCorrect: resp.isCorrect
+                }
+            });
+
+            modal.result.then(function () {
+                getQuestion();
+            });
         })
         .on('receiveQuestion', function (resp) {
             $scope.$apply(function () {
-                vm.q = {
-                    id: resp._id,
-                    text: resp.question,
-                    possibleAnswers: resp.possibleAnswers,
-                    isRadio: resp.isRadio
-                };
+                vm.q = resp.question;
                 vm.qScore = resp.qScore;
                 vm.totalScore = resp.totalScore;
                 vm.qIndex++;
@@ -44,11 +52,8 @@ function GameCtrl($state, socket, $scope) {
         var answer = $("input[name*=answer-]:checked").attr('value');
 
         socket.io().emit('answer', {
-            player: {
-                _id: vm.player._id,
-                socket: vm.player.socket
-            },
             game: vm.game,
+            player: vm.you,
             q: {
                 _id: vm.q.id,
                 answer: answer
@@ -59,8 +64,7 @@ function GameCtrl($state, socket, $scope) {
     function getQuestion() {
         socket.io().emit('getQuestion', {
             game: vm.game,
-            pSocket: vm.player.socket,
-            pId: vm.player._id,
+            player: vm.you,
             qIndex: vm.qIndex
         });
     }

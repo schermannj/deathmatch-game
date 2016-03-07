@@ -6,7 +6,8 @@
 
 var app = angular.module('app', [
         'ui.router',
-        'app.config'
+        'app.config',
+        'ui.bootstrap'
     ])
     .config(routerProvider)
     .config(routes);
