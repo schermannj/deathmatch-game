@@ -273,14 +273,11 @@ function startScoreCountdown(game, pSocket, score) {
 
         if (score > 0 && pSocketsScoreMap[pSocket].inAction) {
             setTimeout(countdown, 100);
-        } else {
-            pSocketsScoreMap[pSocket].score = score;
         }
-    }, 100);
-}
 
-function updateReadyPlayerCondition(playerId, callback) {
-    Player.update({_id: playerId}, {$set: {ready: true}}, callback);
+        putScoreToMap(pSocket, score);
+
+    }, 100);
 }
 
 function loadQuestionsForGame(level) {
@@ -332,7 +329,10 @@ function mongoQuestionsDump() {
         _id: uuid.v1({nsecs: 961}),
         question: "What is JVM ?",
         possibleAnswers: [
-            {index: 1, text: "A Java virtual machine (JVM) is a process virtual machine that can execute Java bytecode."},
+            {
+                index: 1,
+                text: "A Java virtual machine (JVM) is a process virtual machine that can execute Java bytecode."
+            },
             {index: 2, text: "Something else"},
             {index: 3, text: "Zalupa konskaya"},
             {index: 4, text: "STH"}
@@ -363,9 +363,9 @@ function mongoQuestionsDump() {
         question: "What are the basic interface of Java Collections Framework ?",
         possibleAnswers: [
             {index: 1, text: "HashMap"},
-            {index: 1, text: "Collection"},
-            {index: 1, text: "ArrayList"},
-            {index: 1, text: "Array"}
+            {index: 2, text: "Collection"},
+            {index: 3, text: "ArrayList"},
+            {index: 4, text: "Array"}
         ],
         isRadio: true,
         rightAnswers: [2],

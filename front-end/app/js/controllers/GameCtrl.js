@@ -49,9 +49,9 @@ function GameCtrl($state, socket, $scope, $uibModal) {
 
     function doAnswer() {
         var answer = [];
-        //TODO: fix it
-        $("input[name*=answer-]:checked").attr('value').forEach(function (item) {
-            answer.push(parseInt(item));
+
+        $("input[name*=answer-]:checked").each(function (i, item) {
+            answer.push(parseInt(item.value));
         });
 
         socket.io().emit('answer', {
