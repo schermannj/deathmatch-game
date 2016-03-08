@@ -160,7 +160,15 @@ function getQuestionEvent(req) {
         if (req.qIndex < game.questions.length) {
             var qId = game.questions[req.qIndex];
         } else if (req.qIndex == game.questions.length) {
-            //TODO: game finished!
+            //TODO: maybe move it to doAnswer ?
+            Player.findOne({_id: req.player._id}, function (err, player) {
+                validate(err, "Can't find player.");
+                assertNotNull(player);
+
+                gameIo.sockets.in(game._id).sockets[player.socket].emit('gameOver', {
+                    totalScore: player.score
+                });
+            });
         } else {
             throw new Error("Wrong qIndex: " + req.qIndex);
         }
