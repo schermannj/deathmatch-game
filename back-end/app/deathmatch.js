@@ -155,9 +155,12 @@ function answerEvent(req) {
 function getQuestionEvent(req) {
     Game.findOne({_id: req.game}, function (err, game) {
         validate(err, "Can't find game.");
+        assertNotNull(game);
 
-        if (game != null && req.qIndex < game.questions.length) {
+        if (req.qIndex < game.questions.length) {
             var qId = game.questions[req.qIndex];
+        } else if (req.qIndex == game.questions.length) {
+            //TODO: game finished!
         } else {
             throw new Error("Wrong qIndex: " + req.qIndex);
         }
@@ -376,6 +379,12 @@ function mongoQuestionsDump() {
 
 function validate(err, message) {
     if (err) {
-        throw new Error(message.concat("Cause: " + err))
+        throw new Error(message.concat("Cause: " + err));
+    }
+}
+
+function assertNotNull(obj) {
+    if (obj == null) {
+        throw new Error("Object " + obj + " can't be null!");
     }
 }
