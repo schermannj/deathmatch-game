@@ -33,6 +33,26 @@ function GameCtrl($state, socket, $scope, $uibModal) {
                 getQuestion();
             });
         })
+        .on('gameOver', function (resp) {
+            var modal = $uibModal.open({
+                templateUrl: 'templates/game-over.modal.html',
+                controller: 'GameOverModalInstanceCtrl',
+                controllerAs: 'vm',
+                size: 'sm',
+                resolve: {
+                    totalScore: resp.totalScore,
+                    player: resp.player,
+                    game: resp.game
+                }
+            });
+
+            modal.result.then(function () {
+                //getQuestion();
+                //TODO: start form here!
+                console.log("Got to the score table page!");
+                $state.go('main');
+            });
+        })
         .on('receiveQuestion', function (resp) {
             $scope.$apply(function () {
                 vm.q = resp.question;
@@ -59,7 +79,8 @@ function GameCtrl($state, socket, $scope, $uibModal) {
             player: vm.you,
             q: {
                 _id: vm.q.id,
-                answer: answer
+                answer: answer,
+                index: vm.qIndex
             }
         });
     }

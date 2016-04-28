@@ -125,30 +125,45 @@ function joinRoomEvent(data) {
 function answerEvent(req) {
     pSocketsScoreMap[req.player.socket].inAction = false;
 
-    var pScore = pSocketsScoreMap[req.player.socket].score;
-    var isCorrect = false;
+    Game.findOne({_id: req.game}, function (err, game) {
+        validate(err, "Can't find game.");
+        assertNotNull(game);
 
-    Question.findOne({_id: req.q._id}, function (err, question) {
-        validate(err, "Can't find question.");
+        var pScore = pSocketsScoreMap[req.player.socket].score;
+        var isCorrect = false;
 
-        var answersIntersection = _.intersection(question.rightAnswers, req.q.answer);
+        Question.findOne({_id: req.q._id}, function (err, question) {
+            validate(err, "Can't find question.");
 
-        if (question.rightAnswers.length == answersIntersection.length) {
-            isCorrect = true;
-        } else {
-            pScore = 0;
-        }
+            var answersIntersection = _.intersection(question.rightAnswers, req.q.answer);
 
-        Player.update({_id: req.player._id}, {$inc: {score: pScore}}, function (err) {
-            validate(err, "Can't find player.");
+            if (question.rightAnswers.length == answersIntersection.length) {
+                isCorrect = true;
+            } else {
+                pScore = 0;
+            }
 
-            Player.findOne({_id: req.player._id}, function (err, player) {
+            Player.update({_id: req.player._id}, {$inc: {score: pScore}}, function (err) {
+                validate(err, "Can't find player.");
 
-                pSocketsScoreMap[req.player.socket].score = 0;
+                Player.findOne({_id: req.player._id}, function (err, player) {
 
-                gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
-                    totalScore: player.score,
-                    isCorrect: isCorrect
+                    pSocketsScoreMap[req.player.socket].score = 0;
+
+                    if (req.q.index == game.questions.length) {
+                        //this is the last question
+                        gameIo.sockets.in(req.game).sockets[req.player.socket].emit('gameOver', {
+                            totalScore: player.score,
+                            player: player,
+                            game: game
+                        });
+                    } else {
+                        //there are more questions
+                        gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
+                            totalScore: player.score,
+                            isCorrect: isCorrect
+                        });
+                    }
                 });
             });
         });
@@ -160,45 +175,40 @@ function getQuestionEvent(req) {
         validate(err, "Can't find game.");
         assertNotNull(game);
 
-        if (req.qIndex < game.questions.length) {
-            var qId = game.questions[req.qIndex];
-        } else if (req.qIndex == game.questions.length) {
-            //TODO: maybe move it to doAnswer ?
-            Player.findOne({_id: req.player._id}, function (err, player) {
-                validate(err, "Can't find player.");
-                assertNotNull(player);
+        var qId = null;
 
-                gameIo.sockets.in(game._id).sockets[player.socket].emit('gameOver', {
-                    totalScore: player.score
-                });
-            });
+        if (req.qIndex < game.questions.length) {
+            qId = game.questions[req.qIndex];
         } else {
             throw new Error("Wrong qIndex: " + req.qIndex);
         }
 
-        Question.findOne({_id: qId}, function (err, question) {
-            validate(err, "Can't find question.");
+        //if it's a valid question index and there is next question
+        if (qId != null) {
+            Question.findOne({_id: qId}, function (err, question) {
+                validate(err, "Can't find question.");
 
-            var startScore = 60000;
+                var startScore = 60000;
 
-            Player.findOne({_id: req.player._id}, function (err, player) {
-                validate(err, "Can't find player.");
+                Player.findOne({_id: req.player._id}, function (err, player) {
+                    validate(err, "Can't find player.");
 
-                gameIo.sockets.in(game._id).sockets[player.socket].emit('receiveQuestion', {
-                    question: {
-                        id: question._id,
-                        text: question.question,
-                        possibleAnswers: question.possibleAnswers,
-                        isRadio: question.isRadio
-                    },
-                    qScore: startScore,
-                    totalScore: player.score
+                    gameIo.sockets.in(game._id).sockets[player.socket].emit('receiveQuestion', {
+                        question: {
+                            id: question._id,
+                            text: question.question,
+                            possibleAnswers: question.possibleAnswers,
+                            isRadio: question.isRadio
+                        },
+                        qScore: startScore,
+                        totalScore: player.score
+                    });
+
+                    putScoreToMap(player.socket, startScore);
+                    startScoreCountdown(game._id, player.socket, startScore);
                 });
-
-                putScoreToMap(player.socket, startScore);
-                startScoreCountdown(game._id, player.socket, startScore);
-            });
-        })
+            })
+        }
     })
 }
 
