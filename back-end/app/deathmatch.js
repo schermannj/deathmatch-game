@@ -30,7 +30,7 @@ function createRoomEvent(data) {
     var sock = this;
 
     //mongodb questions dump
-    mongoQuestionsDump();
+    //mongoQuestionsDump();
 
     new Player({
         _id: uuid.v1({nsecs: 961}),
@@ -139,14 +139,17 @@ function answerEvent(req) {
             pScore = 0;
         }
 
-        Player.update({_id: req.player._id}, {$set: {score: pScore}}, function (err, player) {
+        Player.update({_id: req.player._id}, {$inc: {score: pScore}}, function (err) {
             validate(err, "Can't find player.");
 
-            pSocketsScoreMap[req.player.socket].score = 0;
+            Player.findOne({_id: req.player._id}, function (err, player) {
 
-            gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
-                totalScore: pScore,
-                isCorrect: isCorrect
+                pSocketsScoreMap[req.player.socket].score = 0;
+
+                gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
+                    totalScore: player.score,
+                    isCorrect: isCorrect
+                });
             });
         });
     });
