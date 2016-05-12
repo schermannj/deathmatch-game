@@ -47,10 +47,7 @@ function GameCtrl($state, socket, $scope, $uibModal) {
             });
 
             modal.result.then(function () {
-                //getQuestion();
-                //TODO: start form here!
-                console.log("Got to the score table page!");
-                $state.go('main');
+                $state.go('scores');
             });
         })
         .on('receiveQuestion', function (resp) {

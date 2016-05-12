@@ -24,6 +24,7 @@ module.exports = function (io, socket) {
     gameSocket.on('answer', answerEvent);
     gameSocket.on('getQuestion', getQuestionEvent);
     gameSocket.on('allPlayersAreReady', allPlayersAreReady);
+    gameSocket.on('getTableScore', getTableScore);
 };
 
 function createRoomEvent(data) {
@@ -38,7 +39,8 @@ function createRoomEvent(data) {
         ready: false,
         isAdmin: true,
         socket: sock.id,
-        score: 0
+        score: 0,
+        finish: false
     }).save(function (err, player) {
         validate(err, "Can't save player.");
 
@@ -94,7 +96,8 @@ function joinRoomEvent(data) {
             ready: false,
             isAdmin: false,
             socket: sock.id,
-            score: 0
+            score: 0,
+            finish: false
         }).save(function (err, nextPlayer) {
             validate(err, "Can't save player.");
 
@@ -143,25 +146,32 @@ function answerEvent(req) {
                 pScore = 0;
             }
 
-            Player.update({_id: req.player._id}, {$inc: {score: pScore}}, function (err) {
+            var hasMoreQuestions = !(req.q.index == game.questions.length);
+            var updateDocument = {$inc: {score: pScore}};
+
+            if (!hasMoreQuestions) {
+                updateDocument['$set'] = {finish: true};
+            }
+
+            Player.update({_id: req.player._id}, updateDocument, function (err) {
                 validate(err, "Can't find player.");
 
                 Player.findOne({_id: req.player._id}, function (err, player) {
 
                     pSocketsScoreMap[req.player.socket].score = 0;
 
-                    if (req.q.index == game.questions.length) {
+                    if (hasMoreQuestions) {
+                        //there are more questions
+                        gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
+                            totalScore: player.score,
+                            isCorrect: isCorrect
+                        });
+                    } else {
                         //this is the last question
                         gameIo.sockets.in(req.game).sockets[req.player.socket].emit('gameOver', {
                             totalScore: player.score,
                             player: player,
                             game: game
-                        });
-                    } else {
-                        //there are more questions
-                        gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
-                            totalScore: player.score,
-                            isCorrect: isCorrect
                         });
                     }
                 });
@@ -265,6 +275,10 @@ function allPlayersAreReady(data) {
             }
         );
     });
+}
+
+function getTableScore(data) {
+    console.log(data);
 }
 
 function startCountdown(game) {

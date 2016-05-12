@@ -56,5 +56,11 @@ function routes($stateProvider) {
             params: {
                 player: null
             }
+        })
+        .state('scores', {
+            url: '/scores/:game',
+            templateUrl: 'templates/score-table.html',
+            controller: 'ScoreTableCtrl',
+            controllerAs: 'vm'
         });
 }

@@ -15,9 +15,6 @@ var schema = new Schema({
     level: {
         type: Number
     },
-    winner: {
-        type: String
-    },
     created: {
         type: Date,
         default: Date.now()

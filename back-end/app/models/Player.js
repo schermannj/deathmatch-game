@@ -22,6 +22,9 @@ var schema = new Schema({
     },
     score: {
         type: Number
+    },
+    finish: {
+        type: Boolean
     }
 });
 
