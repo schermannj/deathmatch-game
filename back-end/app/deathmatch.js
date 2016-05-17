@@ -173,6 +173,9 @@ function answerEvent(req) {
                             player: player,
                             game: game
                         });
+
+                        //send request to update score table data for other users
+                        gameIo.sockets.in(req.game).emit('doRefreshCycle');
                     }
                 });
             });
@@ -284,7 +287,7 @@ function getTableScore(req) {
         validate(err, "Can't find game.");
         assertNotNull(game);
 
-        Player.find({_id: {$in: [game.players]}, finish: true}, function (err, players) {
+        Player.find({_id: {$in: game.players}, finish: true}, function (err, players) {
             validate(err, "Can't find players");
 
             //collect score table data

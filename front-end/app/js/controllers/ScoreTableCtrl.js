@@ -10,11 +10,15 @@ function ScoreTableCtrl($state, socket, $scope) {
 
     refresh();
 
-    socket.io().on('refreshScoreTable', function (resp) {
-        $scope.$apply(function () {
-            vm.players = resp.players;
+    socket.io()
+        .on('refreshScoreTable', function (resp) {
+            $scope.$apply(function () {
+                vm.players = resp.players;
+            });
+        })
+        .on('doRefreshCycle', function () {
+            refresh();
         });
-    });
 
     function refresh() {
         socket.io().emit('getTableScore', {game: vm.game});
