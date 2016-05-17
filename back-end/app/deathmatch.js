@@ -277,8 +277,30 @@ function allPlayersAreReady(data) {
     });
 }
 
-function getTableScore(data) {
-    console.log(data);
+function getTableScore(req) {
+    var sock = this;
+
+    Game.findOne({_id: req.game}, function (err, game) {
+        validate(err, "Can't find game.");
+        assertNotNull(game);
+
+        Player.find({_id: {$in: [game.players]}, finish: true}, function (err, players) {
+            validate(err, "Can't find players");
+
+            //collect score table data
+            var scoreTableData = _.map(players, function (player) {
+                return {
+                    name: player.name,
+                    score: player.score
+                }
+            });
+
+            //send new data
+            sock.emit('refreshScoreTable', {
+                players: scoreTableData
+            })
+        })
+    });
 }
 
 function startCountdown(game) {

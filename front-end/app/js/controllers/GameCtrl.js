@@ -47,7 +47,9 @@ function GameCtrl($state, socket, $scope, $uibModal) {
             });
 
             modal.result.then(function () {
-                $state.go('scores');
+                $state.go('scores', {
+                    game: vm.game
+                });
             });
         })
         .on('receiveQuestion', function (resp) {
