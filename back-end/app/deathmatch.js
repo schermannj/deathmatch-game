@@ -4,6 +4,9 @@ var Question = require('./models/Question').Question;
 var Player = require('./models/Player').Player;
 var _ = require('underscore');
 var q = require('q');
+var ExceptionHandlerService = require('./services/exception-handler.service'), 
+    ehs = new ExceptionHandlerService();
+var doMongoDump = require('./services/mongo-dump.service');
 
 var gameIo;
 var gameSocket;
@@ -30,8 +33,7 @@ module.exports = function (io, socket) {
 function createRoomEvent(data) {
     var sock = this;
 
-    //mongodb questions dump
-    //mongoQuestionsDump();
+    doMongoDump(false);
 
     new Player({
         _id: uuid.v1({nsecs: 961}),
@@ -61,8 +63,8 @@ function createRoomEvent(data) {
                         game: game._id,
                         you: player
                     });
-                }, validate);
-        }, validate)
+                }, ehs.validate);
+        }, ehs.validate)
 }
 
 function joinRoomEvent(data) {
@@ -99,8 +101,8 @@ function joinRoomEvent(data) {
                         game: game._id,
                         you: nextPlayer
                     });
-                }, validate);
-            }, validate);
+                }, ehs.validate);
+            }, ehs.validate);
     } else {
         // Otherwise, send an error message back to the player.
         this.emit('error', {message: "This game does not exist."});
@@ -116,8 +118,8 @@ function refreshRoom(req) {
                 game: game._id,
                 players: players
             });
-        }, validate);
-    }, validate);
+        }, ehs.validate);
+    }, ehs.validate);
 }
 
 function playerIsReadyEvent(data) {
@@ -131,10 +133,10 @@ function playerIsReadyEvent(data) {
 
                     gameIo.sockets.in(game._id).emit('updateRoom', {players: players});
 
-                }, validate);
-            }, validate);
+                }, ehs.validate);
+            }, ehs.validate);
         }
-    }, validate)
+    }, ehs.validate)
 }
 
 function allPlayersAreReady(data) {
@@ -147,19 +149,19 @@ function allPlayersAreReady(data) {
                 {$set: {questions: get5RandomQuestionsIds(questions)}}
             )
 
-        }, validate)
+        }, ehs.validate)
         .then(function (game) {
 
             startCountdown(game).then(function () {
                 gameIo.sockets.in(game._id).emit('startTheBattle');
             })
 
-        }, validate);
+        }, ehs.validate);
 }
 
 function getQuestionEvent(req) {
     Game.findOne({_id: req.game}).then(function (game) {
-        assertNotNull(game);
+        ehs.assertNotNull(game);
 
         var qId = null;
 
@@ -192,17 +194,17 @@ function getQuestionEvent(req) {
 
                     startScoreCountdown(game._id, player.socket, startScore);
 
-                }, validate);
-            }, validate)
+                }, ehs.validate);
+            }, ehs.validate)
         }
-    }, validate)
+    }, ehs.validate)
 }
 
 function answerEvent(req) {
     pSocketsScoreMap[req.player.socket].inAction = false;
 
     Game.findOne({_id: req.game}).then(function (game) {
-        assertNotNull(game);
+        ehs.assertNotNull(game);
 
         var pScore = pSocketsScoreMap[req.player.socket].score;
         var isCorrect = false;
@@ -227,7 +229,7 @@ function answerEvent(req) {
             Player.update({_id: req.player._id}, updateDocument)
                 .then(function () {
                     return Player.findOne({_id: req.player._id});
-                }, validate)
+                }, ehs.validate)
                 .then(function (player) {
                     pSocketsScoreMap[req.player.socket].score = 0;
 
@@ -248,9 +250,9 @@ function answerEvent(req) {
                         //send request to update score table data for other users
                         gameIo.sockets.in(req.game).emit('doRefreshCycle');
                     }
-                }, validate);
-        }, validate);
-    }, validate);
+                }, ehs.validate);
+        }, ehs.validate);
+    }, ehs.validate);
 }
 
 function getTableScore(req) {
@@ -258,10 +260,10 @@ function getTableScore(req) {
 
     Game.findOne({_id: req.game})
         .then(function (game) {
-            assertNotNull(game);
+            ehs.assertNotNull(game);
 
             return Player.find({_id: {$in: game.players}, finish: true})
-        }, validate)
+        }, ehs.validate)
         .then(function (players) {
             //collect score table data
             var scoreTableData = _.map(players, function (player) {
@@ -275,7 +277,7 @@ function getTableScore(req) {
             sock.emit('refreshScoreTable', {
                 players: scoreTableData
             })
-        }, validate);
+        }, ehs.validate);
 }
 
 function getPlayers(game) {
@@ -359,67 +361,5 @@ function get5RandomQuestionsIds(questions) {
         }
 
         return randomQuestions;
-    }
-}
-
-function mongoQuestionsDump() {
-    new Question({
-        _id: uuid.v1({nsecs: 961}),
-        question: "What is JVM ?",
-        possibleAnswers: [
-            {
-                index: 1,
-                text: "A Java virtual machine (JVM) is a process virtual machine that can execute Java bytecode."
-            },
-            {index: 2, text: "Something else"},
-            {index: 3, text: "Zalupa konskaya"},
-            {index: 4, text: "STH"}
-        ],
-        isRadio: true,
-        rightAnswers: [1],
-        tags: ["general"],
-        level: 1
-    }).save();
-
-    new Question({
-        _id: uuid.v1({nsecs: 961}),
-        question: "What are the Data Types supported by Java ?",
-        possibleAnswers: [
-            {index: 1, text: "byte, short, int, long"},
-            {index: 2, text: "double, float, boolean"},
-            {index: 3, text: "integer, var, val"},
-            {index: 4, text: "byte, short, char, int, long, float, double, boolean"}
-        ],
-        isRadio: true,
-        rightAnswers: [4],
-        tags: ["general"],
-        level: 1
-    }).save();
-
-    new Question({
-        _id: uuid.v1({nsecs: 961}),
-        question: "What are the basic interface of Java Collections Framework ?",
-        possibleAnswers: [
-            {index: 1, text: "HashMap"},
-            {index: 2, text: "Collection"},
-            {index: 3, text: "ArrayList"},
-            {index: 4, text: "Array"}
-        ],
-        isRadio: true,
-        rightAnswers: [2],
-        tags: ["general"],
-        level: 1
-    }).save();
-}
-
-function validate(err) {
-    if (err) {
-        throw new Error("Cause: " + err);
-    }
-}
-
-function assertNotNull(obj) {
-    if (obj == null) {
-        throw new Error("Object " + obj + " can't be null!");
     }
 }
