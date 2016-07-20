@@ -14,6 +14,7 @@ function ScoreTableCtrl($state, socket, $scope) {
         .on('refreshScoreTable', function (resp) {
             $scope.$apply(function () {
                 vm.players = resp.players;
+                vm.winner = resp.winner;
             });
         })
         .on('doRefreshCycle', function () {

@@ -4,7 +4,7 @@ var Question = require('./models/Question').Question;
 var Player = require('./models/Player').Player;
 var _ = require('underscore');
 var q = require('q');
-var ExceptionHandlerService = require('./services/exception-handler.service'), 
+var ExceptionHandlerService = require('./services/exception-handler.service'),
     ehs = new ExceptionHandlerService();
 var doMongoDump = require('./services/mongo-dump.service');
 
@@ -168,7 +168,7 @@ function getQuestionEvent(req) {
         if (req.qIndex < game.questions.length) {
             qId = game.questions[req.qIndex];
         } else {
-            validate(new Error("Wrong qIndex: " + req.qIndex));
+            ehs.validate(new Error("Wrong qIndex: " + req.qIndex));
         }
 
         //if it's a valid question index and there is next question
@@ -261,10 +261,14 @@ function getTableScore(req) {
     Game.findOne({_id: req.game})
         .then(function (game) {
             ehs.assertNotNull(game);
-
-            return Player.find({_id: {$in: game.players}, finish: true})
+//TODO: this doesn't work.
+            return q.all([
+                Player.count({_id: {$in: game.players}}),
+                Player.find({_id: {$in: game.players}, finish: true}),
+                Player.find({_id: {$in: game.players}})
+            ])
         }, ehs.validate)
-        .then(function (players) {
+        .then(function (allPlayersCount, finishedPlayers) {
             //collect score table data
             var scoreTableData = _.map(players, function (player) {
                 return {
@@ -273,10 +277,18 @@ function getTableScore(req) {
                 }
             });
 
-            //send new data
-            sock.emit('refreshScoreTable', {
+            var resp = {
                 players: scoreTableData
-            })
+            };
+
+            if (allPlayersCount === players.length) {
+                resp.winner = _.max(players, function (player) {
+                   return player.score;
+                });
+            }
+
+            //send new data
+            sock.emit('refreshScoreTable', resp);
         }, ehs.validate);
 }
 
