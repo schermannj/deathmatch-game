@@ -1,21 +1,14 @@
-function ExceptionHandlerService() {
-}
+export default class ExceptionHandlerService {
 
-ExceptionHandlerService.prototype = {
-    validate: validate,
-    assertNotNull: assertNotNull
-};
+    static validate(err) {
+        if (err) {
+            throw new Error("Cause: " + err);
+        }
+    }
 
-function validate(err) {
-    if (err) {
-        throw new Error("Cause: " + err);
+    static assertNotNull(obj) {
+        if (obj == null) {
+            throw new Error("Object " + obj + " can't be null!");
+        }
     }
 }
-
-function assertNotNull(obj) {
-    if (obj == null) {
-        throw new Error("Object " + obj + " can't be null!");
-    }
-}
-
-module.exports = ExceptionHandlerService;

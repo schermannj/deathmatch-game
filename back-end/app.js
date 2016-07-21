@@ -1,7 +1,7 @@
 const logger = require('morgan');
 const cors = require('cors');
 const io = require('socket.io')(3001);
-const dm = require('./app/deathmatch');
+const GameModule = require('./app/deathmatch').GameModule;
 const express = require('express');
 const debug = require('debug')('back-end:server');
 const http = require('http');
@@ -49,7 +49,7 @@ server.on('listening', onListening);
  */
 
 io.sockets.on('connection', (socket) => {
-    dm(io, socket);
+    new GameModule(io, socket).init();
 });
 io.set('origins', 'http://localhost:8888');
 

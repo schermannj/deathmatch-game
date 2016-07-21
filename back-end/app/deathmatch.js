@@ -3,10 +3,8 @@ import Game from './models/Game';
 import Question from './models/Question';
 import Player from './models/Player';
 import * as _ from 'lodash';
-import ExceptionHandlerService from './services/exception-handler.service';
+import ehs from './services/exception-handler.service';
 import doMongoDump from './services/mongo-dump.service';
-
-let ehs = new ExceptionHandlerService();
 
 // let gameIo;
 // let gameSocket;
