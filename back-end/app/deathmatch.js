@@ -6,11 +6,12 @@ import * as _ from 'lodash';
 import ehs from './services/exception-handler.service';
 import doMongoDump from './services/mongo-dump.service';
 
-// let gameIo;
-// let gameSocket;
+
 const pSocketsScoreMap = {};
 
 export default class GameModule {
+
+    //TODO: rewrite all function, var, and check scopes
 
     constructor(io, socket) {
         this.gameIo = io;
@@ -30,8 +31,10 @@ export default class GameModule {
         this.gameSocket.on('getTableScore', this.getTableScore);
     }
 
+    /**
+     * @this is a socket obj;
+     */
     createRoomEvent(data) {
-        //TODO: check it
         var sock = this;
 
         doMongoDump(false);
@@ -68,6 +71,9 @@ export default class GameModule {
             }, ehs.validate)
     }
 
+    /**
+     * @this is a socket obj;
+     */
     joinRoomEvent(data) {
         let self = this;
         // A reference to the player's Socket.IO socket object
@@ -112,6 +118,9 @@ export default class GameModule {
         }
     }
 
+    /**
+     * @this is a socket obj;
+     */
     refreshRoom(req) {
         let self = this;
 
@@ -127,6 +136,9 @@ export default class GameModule {
         }, ehs.validate);
     }
 
+    /**
+     * @this is a socket obj;
+     */
     playerIsReadyEvent(data) {
         let self = this;
 
@@ -146,6 +158,9 @@ export default class GameModule {
         }, ehs.validate)
     }
 
+    /**
+     * @this is a socket obj;
+     */
     allPlayersAreReady(data) {
         let self = this;
 
@@ -168,6 +183,9 @@ export default class GameModule {
             }, ehs.validate);
     }
 
+    /**
+     * @this is a socket obj;
+     */
     getQuestionEvent(req) {
         let self = this;
 
@@ -211,6 +229,9 @@ export default class GameModule {
         }, ehs.validate)
     }
 
+    /**
+     * @this is a socket obj;
+     */
     answerEvent(req) {
         let self = this;
 
@@ -268,6 +289,9 @@ export default class GameModule {
         }, ehs.validate);
     }
 
+    /**
+     * @this is a socket obj;
+     */
     getTableScore(req) {
         //TODO: check it
         var sock = this;
