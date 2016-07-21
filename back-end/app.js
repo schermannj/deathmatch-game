@@ -1,6 +1,6 @@
 const logger = require('morgan');
 const cors = require('cors');
-const io = require('socket.io').listen(3001);
+const io = require('socket.io')(3001);
 const dm = require('./app/deathmatch');
 const express = require('express');
 const debug = require('debug')('back-end:server');
