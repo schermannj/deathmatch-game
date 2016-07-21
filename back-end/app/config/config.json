@@ -1,5 +1,0 @@
-{
-  "mongoose": {
-    "uri": "mongodb://localhost/java_death_match"
-  }
-}

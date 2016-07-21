@@ -1,0 +1,1 @@
+export const MONGOOSE_URI = 'mongodb://localhost/java_death_match';

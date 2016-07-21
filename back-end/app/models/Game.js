@@ -1,7 +1,8 @@
-var mongoose = require('../components/mongoose'),
-    Schema = mongoose.Schema;
+import mongoose from '../components/mongoose';
 
-var schema = new Schema({
+const Schema = mongoose.Schema;
+
+const GameSchema = new Schema({
     _id: {
         type: String,
         required: true
@@ -21,4 +22,4 @@ var schema = new Schema({
     }
 });
 
-exports.Game = mongoose.model('Game', schema);
+export default mongoose.model('Game', GameSchema);

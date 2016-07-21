@@ -1,7 +1,8 @@
-var mongoose = require('../components/mongoose'),
-    Schema = mongoose.Schema;
+import mongoose from '../components/mongoose';
 
-var schema = new Schema({
+const Schema = mongoose.Schema;
+
+const QuestionSchema = new Schema({
     _id: {
         type: String,
         required: true
@@ -18,7 +19,7 @@ var schema = new Schema({
         type: [Number]
     },
     isRadio: {
-      type: Boolean,
+        type: Boolean,
         required: true
     },
     tags: {
@@ -29,4 +30,4 @@ var schema = new Schema({
     }
 });
 
-exports.Question = mongoose.model('Question', schema);
+export default mongoose.model('Question', QuestionSchema);

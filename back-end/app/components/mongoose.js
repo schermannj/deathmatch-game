@@ -1,10 +1,9 @@
 /**
  * Created on 19.01.16.
  */
+import mongoose from 'mongoose';
+import {MONGOOSE_URI} from '../config/constants';
 
-var mongoose = require('mongoose');
-var config = require('../config');
+mongoose.connect(MONGOOSE_URI);
 
-mongoose.connect(config.get('mongoose:uri'));
-
-module.exports = mongoose;
+export default mongoose;
