@@ -3,17 +3,17 @@ app.factory('socket', socket);
 socket.$inject = ['Config'];
 
 function socket(Config) {
-    var ioInst = null;
+    var _io = null;
 
     return {
         io: io
     };
 
-    function io() {
-        if(!ioInst) {
-            ioInst = window['io'](Config.WS_SERVER_URL);
+    function io(recreate) {
+        if(!_io || recreate) {
+            _io = window['io'](Config.WS_SERVER_URL);
         }
 
-        return ioInst;
+        return _io;
     }
 }

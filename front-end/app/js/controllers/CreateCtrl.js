@@ -11,7 +11,7 @@ function CreateCtrl($state, socket) {
 
     vm.createRoom = createRoom;
 
-    socket.io()
+    socket.io(true)
         .on('roomCreated', function (resp) {
             $state.go('wait-for-player', resp)
         });
