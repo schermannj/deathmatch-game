@@ -42,37 +42,42 @@ export default class GameModule {
      */
     createRoomEvent(data) {
         let sock = this;
+        let savedGame;
 
-        new Player({
-            _id: uuid.v1({nsecs: 961}),
-            name: data.username,
-            ready: false,
-            isAdmin: true,
-            socket: sock.id,
-            score: 0,
-            finish: false
-        }).save()
-            .then(function (player) {
+        // create a game instance
+        new Game({
+                _id: uuid.v1({nsecs: 961}),
+                questions: [],
+                level: data.level ? data.level : 1
+            })
+            .save()
+            .then((game) => {
+                // save game instance to local scope
+                savedGame = game;
 
-                return new Game({
-                        _id: uuid.v1({nsecs: 961}),
-                        players: [
-                            player._id
-                        ],
-                        questions: [],
-                        level: data.level ? data.level : 1
-                    }
-                ).save()
-                    .then(function (game) {
-                        // Join the Game and wait for the players
-                        sock.join(game._id);
+                // create joined player and save it to db
+                return new Player({
+                    _id: uuid.v1({nsecs: 961}),
+                    name: data.username,
+                    game: game._id,
+                    ready: false,
+                    isAdmin: true,
+                    socket: sock.id,
+                    score: 0,
+                    finish: false
+                }).save();
 
-                        sock.emit('roomCreated', {
-                            game: game._id,
-                            you: player
-                        });
-                    }, ehs.validate);
             }, ehs.validate)
+            .then((player) => {
+                // join the game (sock is a socket of joined player)
+                sock.join(savedGame._id);
+
+                sock.emit('roomCreated', {
+                    game: savedGame._id,
+                    you: player
+                });
+
+            }, ehs.validate);
     }
 
     /**
