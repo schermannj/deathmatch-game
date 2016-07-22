@@ -93,7 +93,7 @@ export default class GameModule {
         let sock = this;
 
         // If the game exists...
-        if (!self.validateGameExistance(data.game, sock)) {
+        if (!self.validateGameExistence(data.game, sock)) {
             return;
         }
 
@@ -143,7 +143,7 @@ export default class GameModule {
      * @this is a socket obj;
      */
     playerIsReadyEvent(data) {
-        if (!self.validateGameExistance(data.game, this)) {
+        if (!self.validateGameExistence(data.game, this)) {
             return;
         }
 
@@ -167,7 +167,7 @@ export default class GameModule {
      * @this is a socket obj;
      */
     allPlayersAreReady(data) {
-        if (!self.validateGameExistance(data.game, this)) {
+        if (!self.validateGameExistence(data.game, this)) {
             return;
         }
 
@@ -201,7 +201,7 @@ export default class GameModule {
     getQuestionEvent(data) {
         let sock = this;
 
-        if (!self.validateGameExistance(data.game, sock)) {
+        if (!self.validateGameExistence(data.game, sock)) {
             return;
         }
 
@@ -268,7 +268,7 @@ export default class GameModule {
     answerEvent(data) {
         let sock = this;
 
-        if (!self.validateGameExistance(data.game, sock)) {
+        if (!self.validateGameExistence(data.game, sock)) {
             return;
         }
 
@@ -351,7 +351,7 @@ export default class GameModule {
     getTableScore(data)  {
         let sock = this;
 
-        if (!self.validateGameExistance(data.game, sock)) {
+        if (!self.validateGameExistence(data.game, sock)) {
             return;
         }
 
@@ -473,7 +473,7 @@ export default class GameModule {
         return self.gameSocket.adapter.rooms[game];
     }
 
-    validateGameExistance(game, sock) {
+    validateGameExistence(game, sock) {
         if (!self.doesGameExist(game)) {
             sock.emit('error', {message: "This game does not exist anymore."});
 
