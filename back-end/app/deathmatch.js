@@ -348,41 +348,40 @@ export default class GameModule {
     /**
      * @this is a socket obj;
      */
-    getTableScore(req) {
-        //TODO: check it
-        var sock = this;
+    getTableScore(data)  {
+        let sock = this;
 
-        Game.findOne({_id: req.game})
-            .then(function (game) {
-                ehs.assertNotNull(game);
-                //TODO: this doesn't work.
-                return q.all([
-                    Player.count({_id: {$in: game.players}}),
-                    Player.find({_id: {$in: game.players}, finish: true}),
-                    Player.find({_id: {$in: game.players}})
-                ])
-            }, ehs.validate)
-            .then(function (allPlayersCount, finishedPlayers) {
+        if (!self.validateGameExistance(data.game, sock)) {
+            return;
+        }
+
+        Player.find({game: data.game})
+            .then((players) => {
+
+                // find players who finished the game
+                let finishedPlayers = _.filter(players, (player) => player.finish);
+
                 //collect score table data
-                var scoreTableData = _.map(players, function (player) {
+                let scoreTableData = _.map(finishedPlayers, (player) => {
                     return {
                         name: player.name,
                         score: player.score
                     }
                 });
 
-                var resp = {
+                // create resp object
+                let resp = {
                     players: scoreTableData
                 };
 
-                if (allPlayersCount === players.length) {
-                    resp.winner = _.max(players, function (player) {
-                        return player.score;
-                    });
+                // if all players finished the game then we're gonna look for the winner
+                if (players.length === finishedPlayers.length) {
+                    resp.winner = _.max(players, (player) => player.score);
                 }
 
                 //send new data
                 sock.emit('refreshScoreTable', resp);
+
             }, ehs.validate);
     }
 
