@@ -10,6 +10,10 @@ const PlayerSchema = new Schema({
     isAdmin : {
         type: Boolean
     },
+    game: {
+        type: String,
+        required: true
+    },
     name: {
         type: String,
         required: true

@@ -7,9 +7,12 @@ const GameSchema = new Schema({
         type: String,
         required: true
     },
+
+    /** @Deprecated */
     players: {
         type: [String]
     },
+
     questions: {
         type: [String]
     },
