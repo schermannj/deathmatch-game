@@ -1,4 +1,3 @@
-import uuid from 'uuid';
 import * as _ from 'lodash';
 import Game from '../models/Game';
 import Player from '../models/Player';
@@ -28,7 +27,6 @@ export default class RoomEventHandler {
 
         // create a game instance
         new Game({
-                _id: uuid.v1({nsecs: 961}),
                 questions: [],
                 level: data.level ? data.level : 1
             })
@@ -39,14 +37,10 @@ export default class RoomEventHandler {
 
                 // create joined player and save it to db
                 return new Player({
-                    _id: uuid.v1({nsecs: 961}),
                     name: data.username,
                     game: game._id,
-                    ready: false,
                     isAdmin: true,
                     socket: sock.id,
-                    score: 0,
-                    finish: false
                 }).save();
 
             }, ExceptionHandlerService.validate)
@@ -76,14 +70,9 @@ export default class RoomEventHandler {
 
         // create new player
         new Player({
-                _id: uuid.v1({nsecs: 961}),
                 name: data.username,
                 game: data.game,
-                ready: false,
-                isAdmin: false,
                 socket: sock.id,
-                score: 0,
-                finish: false
             })
             .save()
             .then((player) => {

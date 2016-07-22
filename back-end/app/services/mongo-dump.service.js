@@ -1,11 +1,9 @@
-import uuid from "uuid";
 import Question from "../models/Question";
 
 export default class MongoDumpService {
 
     static doQuestionDump() {
         new Question({
-            _id: uuid.v1({nsecs: 961}),
             question: "What is JVM ?",
             possibleAnswers: [
                 {
@@ -23,7 +21,6 @@ export default class MongoDumpService {
         }).save();
 
         new Question({
-            _id: uuid.v1({nsecs: 961}),
             question: "What are the Data Types supported by Java ?",
             possibleAnswers: [
                 {index: 1, text: "byte, short, int, long"},
@@ -38,7 +35,6 @@ export default class MongoDumpService {
         }).save();
 
         new Question({
-            _id: uuid.v1({nsecs: 961}),
             question: "What are the basic interface of Java Collections Framework ?",
             possibleAnswers: [
                 {index: 1, text: "HashMap"},

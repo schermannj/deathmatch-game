@@ -1,3 +1,4 @@
+import uuid from 'uuid';
 import mongoose from '../components/mongoose';
 
 const Schema = mongoose.Schema;
@@ -5,14 +6,9 @@ const Schema = mongoose.Schema;
 const GameSchema = new Schema({
     _id: {
         type: String,
-        required: true
+        required: true,
+        default: uuid.v1({nsecs: 961})
     },
-
-    /** @Deprecated */
-    players: {
-        type: [String]
-    },
-
     questions: {
         type: [String]
     },

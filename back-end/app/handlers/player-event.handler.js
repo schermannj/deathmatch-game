@@ -16,6 +16,7 @@ export default class PlayerEventHandler {
         self.gameIo = gameIo;
         self.ehs = ehs;
 
+        gameSocket.on('disconnect', this.playerLeaveEvent);
         gameSocket.on('playerIsReady', this.playerIsReadyEvent);
         gameSocket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
     }
@@ -74,6 +75,13 @@ export default class PlayerEventHandler {
                 // start game when countdown has been finished
                 self.gameIo.sockets.in(data.game).emit('startTheBattle');
             }, ExceptionHandlerService.validate);
+    }
+
+    /**
+     * @this is a socket obj;
+     */
+    playerLeaveEvent() {
+        Player.findOneAndUpdate({socket: this.id}, {$set: {disconnected: true}}, {new: true});
     }
 
     startCountdown(game) {
