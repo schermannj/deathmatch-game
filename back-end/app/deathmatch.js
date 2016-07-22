@@ -10,27 +10,27 @@ import MongoDumpService from './services/mongo-dump.service';
 const DO_MONGO_DUMP = false;
 const pSocketsScoreMap = {};
 
-let gameIo;
-let gameSocket;
-
+let self;
 export default class GameModule {
 
     constructor(io, socket) {
-        gameIo = io;
-        gameSocket = socket;
+        self = this;
 
-        gameSocket.emit('connected', {message: "You are connected!"});
+        self.gameIo = io;
+        self.gameSocket = socket;
+
+        self.gameSocket.emit('connected', {message: "You are connected!"});
     }
 
     init() {
-        gameSocket.on('createRoom', this.createRoomEvent);
-        gameSocket.on('joinRoom', this.joinRoomEvent);
-        gameSocket.on('refreshRoom', this.refreshRoom);
-        gameSocket.on('playerIsReady', this.playerIsReadyEvent);
-        gameSocket.on('allPlayersAreReady', this.allPlayersAreReady);
-        gameSocket.on('getQuestion', this.getQuestionEvent);
-        gameSocket.on('answer', this.answerEvent);
-        gameSocket.on('getTableScore', this.getTableScore);
+        self.gameSocket.on('createRoom', this.createRoomEvent);
+        self.gameSocket.on('joinRoom', this.joinRoomEvent);
+        self.gameSocket.on('refreshRoom', this.refreshRoom);
+        self.gameSocket.on('playerIsReady', this.playerIsReadyEvent);
+        self.gameSocket.on('allPlayersAreReady', this.allPlayersAreReady);
+        self.gameSocket.on('getQuestion', this.getQuestionEvent);
+        self.gameSocket.on('answer', this.answerEvent);
+        self.gameSocket.on('getTableScore', this.getTableScore);
 
         if (DO_MONGO_DUMP) {
             MongoDumpService.doQuestionDump();
@@ -72,6 +72,7 @@ export default class GameModule {
                 // join the game (sock is a socket of joined player)
                 sock.join(savedGame._id);
 
+                // send event to FE, to the joined player
                 sock.emit('roomCreated', {
                     game: savedGame._id,
                     you: player
@@ -84,65 +85,54 @@ export default class GameModule {
      * @this is a socket obj;
      */
     joinRoomEvent(data) {
-        let self = this;
-        // A reference to the player's Socket.IO socket object
-        //TODO: check it, seems like smth strange
-        var sock = this;
-
-        // Look up the game ID in the Socket.IO manager object.
-        var game = gameSocket.adapter.rooms[data.game];
+        let sock = this;
 
         // If the game exists...
-        if (game) {
-            //create new player
-            new Player({
+        if (!self.doesGameExist(data.game)) {
+            sock.emit('error', {message: "This game does not exist anymore."});
+            return;
+        }
+
+        // create new player
+        new Player({
                 _id: uuid.v1({nsecs: 961}),
                 name: data.username,
+                game: data.game,
                 ready: false,
                 isAdmin: false,
                 socket: sock.id,
                 score: 0,
                 finish: false
-            }).save()
-                .then(function (nextPlayer) {
-                    Game.findOneAndUpdate(
-                        {_id: data.game},
-                        {
-                            $push: {players: nextPlayer._id}
-                        },
-                        {"new": true}
-                    ).then(function (game) {
-                        // Join the game
-                        sock.join(data.game);
+            })
+            .save()
+            .then(function (player) {
+                // join the new player to the game
+                sock.join(data.game);
 
-                        gameIo.sockets.in(data.game).emit('playerJoined', {
-                            game: game._id,
-                            you: nextPlayer
-                        });
-                    }, ehs.validate);
-                }, ehs.validate);
-        } else {
-            // Otherwise, send an error message back to the player.
-            this.emit('error', {message: "This game does not exist."});
-        }
+                // send event to all players from this game
+                self.gameIo.sockets.in(data.game).emit('playerJoined', {
+                    game: data.game,
+                    you: player
+                });
+
+            }, ehs.validate);
     }
 
     /**
      * @this is a socket obj;
      */
-    refreshRoom(req) {
-        let self = this;
+    refreshRoom(data) {
+        // find all players who belongs to this game
+        Player.find({game: data.game})
+            .then(function (players) {
 
-        Game.findOne({_id: req.game}).then(function (game) {
-
-            self.getPlayers(game).then(function (players) {
-
-                gameIo.sockets.in(req.game).emit('updateRoom', {
-                    game: game._id,
+                // send event to all players from this game
+                gameIo.sockets.in(data.game).emit('updateRoom', {
+                    game: data.game,
                     players: players
                 });
+
             }, ehs.validate);
-        }, ehs.validate);
     }
 
     /**
@@ -339,8 +329,9 @@ export default class GameModule {
             }, ehs.validate);
     }
 
+    /** @Deprecated */
     getPlayers(game) {
-        return Player.find({_id: {$in: game.players}});
+        return Player.find({game: game});
     }
 
     putScoreToMap(pSocket, score) {
@@ -425,5 +416,10 @@ export default class GameModule {
 
             return randomQuestions;
         }
+    }
+
+    doesGameExist(game) {
+        // Look up the game ID in the Socket.IO manager object.
+        return self.gameSocket.adapter.rooms[game];
     }
 }
