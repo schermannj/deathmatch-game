@@ -76,6 +76,27 @@ export default class PlayerEventHandler {
             }, ExceptionHandlerService.validate);
     }
 
+    startCountdown(game) {
+        return new Promise((resolve) => {
+            let count = COUNTDOWN_COUNT;
+
+            let countdownFunc = () => {
+                self.gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
+
+                // decrement counter state
+                count--;
+
+                if (count > 0) {
+                    setTimeout(countdownFunc, COUNTDOWN_DELAY);
+                } else {
+                    resolve();
+                }
+            };
+
+            // start countdown function
+            setTimeout(countdownFunc, COUNTDOWN_DELAY);
+        });
+    }
 
     get5RandomQuestionsIds(questions) {
         if (questions.length <= 5) {
@@ -108,28 +129,4 @@ export default class PlayerEventHandler {
             return randomQuestions;
         }
     }
-
-    startCountdown(game) {
-        return new Promise((resolve) => {
-            let count = COUNTDOWN_COUNT;
-
-            let countdownFunc = () => {
-                self.gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
-
-                // decrement counter state
-                count--;
-
-                if (count > 0) {
-                    setTimeout(countdownFunc, COUNTDOWN_DELAY);
-                } else {
-                    resolve();
-                }
-            };
-
-            // start countdown function
-            setTimeout(countdownFunc, COUNTDOWN_DELAY);
-        });
-    }
-
-
 }
