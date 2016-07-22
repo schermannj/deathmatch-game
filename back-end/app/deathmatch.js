@@ -169,9 +169,11 @@ export default class GameModule {
         }
 
         //TODO: implement ability to choose questions level
+        // find all questions for a specific level
         Question.find({level: 1})
             .then((questions) => {
 
+                // save 5 random selected questions to the game object
                 return Game.findOneAndUpdate(
                     {_id: data.game},
                     {$set: {questions: self.get5RandomQuestionsIds(questions)}}
@@ -187,7 +189,7 @@ export default class GameModule {
             .then(() => {
                 // start game when countdown has been finished
                 self.gameIo.sockets.in(data.game).emit('startTheBattle');
-            });
+            }, ehs.validate);
     }
 
     /**
