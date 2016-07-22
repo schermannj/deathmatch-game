@@ -265,61 +265,84 @@ export default class GameModule {
     /**
      * @this is a socket obj;
      */
-    answerEvent(req) {
-        let self = this;
+    answerEvent(data) {
+        let sock = this;
 
-        pSocketsScoreMap[req.player.socket].inAction = false;
+        if (!self.validateGameExistance(data.game, sock)) {
+            return;
+        }
 
-        Game.findOne({_id: req.game}).then(function (game) {
-            ehs.assertNotNull(game);
+        // set up player state to 'false' (it means that player is waiting for result and new question)
+        pSocketsScoreMap[sock.id].inAction = false;
 
-            var pScore = pSocketsScoreMap[req.player.socket].score;
-            var isCorrect = false;
+        let isCorrect = false;
+        let hasMoreQuestions = true;
 
-            Question.findOne({_id: req.q._id}).then(function (question) {
+        Promise.all([Game.findOne({_id: data.game}), Question.findOne({_id: data.q._id})])
+            .then((resolveArray) => {
 
-                var answersIntersection = _.intersection(question.rightAnswers, req.q.answer);
+                // check resolve array (length has to be 2 - game and question)
+                if(resolveArray.length != 2) {
+                    console.debug(`Invalid resolve array length - ${resolveArray.length}`);
 
+                    sock.emit('error', {message: `Something went wrong - invalid resolve array length.`});
+
+                    return;
+                }
+
+                // define game and question variables
+                let game = resolveArray[0];
+                let question = resolveArray[1];
+
+                ehs.assertNotNull(game);
+
+                // get player score for this question
+                let pScore = pSocketsScoreMap[sock.id].score;
+
+                // check if right answers contain player answer
+                let answersIntersection = _.intersection(question.rightAnswers, data.q.answer);
+
+                // if right answers contain player answer then player answer is correct, in other case player score = 0
                 if (question.rightAnswers.length == answersIntersection.length) {
                     isCorrect = true;
                 } else {
                     pScore = 0;
                 }
 
-                var hasMoreQuestions = !(req.q.index == game.questions.length);
-                var updateDocument = {$inc: {score: pScore}};
+                // check if it isn't the last question
+                hasMoreQuestions = data.q.index != game.questions.length;
+                let updateDocument = {$inc: {score: pScore}};
 
+                // if there isn't more questions player finish state will be set to 'true'
                 if (!hasMoreQuestions) {
                     updateDocument['$set'] = {finish: true};
                 }
 
-                Player.update({_id: req.player._id}, updateDocument)
-                    .then(function () {
-                        return Player.findOne({_id: req.player._id});
-                    }, ehs.validate)
-                    .then(function (player) {
-                        pSocketsScoreMap[req.player.socket].score = 0;
+                // update player info and return updated document
+                return Player.findOneAndUpdate({_id: data.player._id, game: data.game}, updateDocument, {new: true});
 
-                        if (hasMoreQuestions) {
-                            //there are more questions
-                            gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
-                                totalScore: player.score,
-                                isCorrect: isCorrect
-                            });
-                        } else {
-                            //this is the last question
-                            gameIo.sockets.in(req.game).sockets[req.player.socket].emit('gameOver', {
-                                totalScore: player.score,
-                                player: player,
-                                game: game
-                            });
+            }, ehs.validate)
+            .then((player) => {
+                // set current player score to 0, in the 'getQuestionEvent' it will be updated
+                pSocketsScoreMap[sock.id].score = 0;
 
-                            //send request to update score table data for other users
-                            gameIo.sockets.in(req.game).emit('doRefreshCycle');
-                        }
-                    }, ehs.validate);
+                if (hasMoreQuestions) {
+                    //there are more questions
+                    sock.emit('answerAccepted', {
+                        totalScore: player.score,
+                        isCorrect: isCorrect
+                    });
+                } else {
+                    //that was the the last question
+                    sock.emit('gameOver', {
+                        player: player,
+                        game: data.game
+                    });
+
+                    // emit an event and update score table data for other users from this game
+                    self.gameIo.sockets.in(data.game).emit('doRefreshCycle');
+                }
             }, ehs.validate);
-        }, ehs.validate);
     }
 
     /**

@@ -3,8 +3,8 @@
         <h3 class="modal-title">Game Over</h3>
     </div>
     <div class="modal-body">
-        <p>Game {{vm.game._id}} has been finished!</p>
-        <b>Dear {{vm.player.name}} </b>your <b>score is {{vm.totalScore}}.</b>
+        <p>Game {{vm.game}} has been finished!</p>
+        <b>Dear {{vm.player.name}} </b>your <b>score is {{vm.player.score}}.</b>
     </div>
     <div class="modal-footer">
         <button class="btn btn-primary" type="button" ng-click="vm.openScoreTable()">Show me results!</button>

@@ -1,12 +1,12 @@
 app.controller('GameOverModalInstanceCtrl', GameOverModalInstanceCtrl);
 
-GameOverModalInstanceCtrl.$inject = ['$uibModalInstance', 'totalScore', 'player'];
+GameOverModalInstanceCtrl.$inject = ['$uibModalInstance', 'player', 'game'];
 
-function GameOverModalInstanceCtrl($uibModalInstance, totalScore, player) {
+function GameOverModalInstanceCtrl($uibModalInstance, player, game) {
     var vm = this;
 
-    vm.totalScore = totalScore;
     vm.player = player;
+    vm.game = game;
 
     vm.openScoreTable = openScoreTable;
 

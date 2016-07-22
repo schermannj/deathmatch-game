@@ -40,9 +40,12 @@ function GameCtrl($state, socket, $scope, $uibModal) {
                 controllerAs: 'vm',
                 size: 'sm',
                 resolve: {
-                    totalScore: resp.totalScore,
-                    player: resp.player,
-                    game: resp.game
+                    player() {
+                        return resp.player;
+                    },
+                    game() {
+                        return resp.game;
+                    }
                 }
             });
 

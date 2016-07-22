@@ -7,7 +7,7 @@ export default class ExceptionHandlerService {
     }
 
     static assertNotNull(obj) {
-        if (obj == null) {
+        if (!obj) {
             throw new Error("Object " + obj + " can't be null!");
         }
     }
