@@ -6,13 +6,12 @@ import * as _ from 'lodash';
 import ehs from './services/exception-handler.service';
 import MongoDumpService from './services/mongo-dump.service';
 
-
 const DO_MONGO_DUMP = false;
 const COUNTDOWN_COUNT = 3;
 const COUNTDOWN_DELAY = 1000;
 const PLAYER_START_SCORE = 60000;
 const SCORE_MIN_DEGREE = 100;
-const SCORE_COUNDOWN_DELAY = 100;
+const SCORE_COUNTDOWN_DELAY = 100;
 const pSocketsScoreMap = {};
 
 let self;
@@ -426,14 +425,14 @@ export default class GameModule {
 
             // if score > 0 and player still didn't answer a question - continue score countdown
             if (score > 0 && pSocketsScoreMap[pSocket.id].inAction) {
-                setTimeout(countdown, SCORE_COUNDOWN_DELAY);
+                setTimeout(countdown, SCORE_COUNTDOWN_DELAY);
             }
 
             // save player's score state to the map;
             self.putScoreToMap(pSocket.id, score);
         };
 
-        setTimeout(countdown, SCORE_COUNDOWN_DELAY);
+        setTimeout(countdown, SCORE_COUNTDOWN_DELAY);
     }
 
     get5RandomQuestionsIds(questions) {
