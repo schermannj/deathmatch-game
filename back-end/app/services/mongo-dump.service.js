@@ -1,9 +1,9 @@
-var uuid = require('uuid');
-var Question = require('../models/Question').Question;
+import uuid from "uuid";
+import Question from "../models/Question";
 
-module.exports = function (doDump) {
-    if (doDump) {
+export default class MongoDumpService {
 
+    static doQuestionDump() {
         new Question({
             _id: uuid.v1({nsecs: 961}),
             question: "What is JVM ?",
@@ -51,5 +51,6 @@ module.exports = function (doDump) {
             tags: ["general"],
             level: 1
         }).save();
+
     }
-};
+}

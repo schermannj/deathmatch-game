@@ -4,40 +4,44 @@ import Question from './models/Question';
 import Player from './models/Player';
 import * as _ from 'lodash';
 import ehs from './services/exception-handler.service';
-import doMongoDump from './services/mongo-dump.service';
+import MongoDumpService from './services/mongo-dump.service';
 
 
+const DO_MONGO_DUMP = false;
 const pSocketsScoreMap = {};
+
+let gameIo;
+let gameSocket;
 
 export default class GameModule {
 
-    //TODO: rewrite all function, var, and check scopes
-
     constructor(io, socket) {
-        this.gameIo = io;
-        this.gameSocket = socket;
+        gameIo = io;
+        gameSocket = socket;
 
-        this.gameSocket.emit('connected', {message: "You are connected!"});
+        gameSocket.emit('connected', {message: "You are connected!"});
     }
 
     init() {
-        this.gameSocket.on('createRoom', this.createRoomEvent);
-        this.gameSocket.on('joinRoom', this.joinRoomEvent);
-        this.gameSocket.on('refreshRoom', this.refreshRoom);
-        this.gameSocket.on('playerIsReady', this.playerIsReadyEvent);
-        this.gameSocket.on('allPlayersAreReady', this.allPlayersAreReady);
-        this.gameSocket.on('getQuestion', this.getQuestionEvent);
-        this.gameSocket.on('answer', this.answerEvent);
-        this.gameSocket.on('getTableScore', this.getTableScore);
+        gameSocket.on('createRoom', this.createRoomEvent);
+        gameSocket.on('joinRoom', this.joinRoomEvent);
+        gameSocket.on('refreshRoom', this.refreshRoom);
+        gameSocket.on('playerIsReady', this.playerIsReadyEvent);
+        gameSocket.on('allPlayersAreReady', this.allPlayersAreReady);
+        gameSocket.on('getQuestion', this.getQuestionEvent);
+        gameSocket.on('answer', this.answerEvent);
+        gameSocket.on('getTableScore', this.getTableScore);
+
+        if (DO_MONGO_DUMP) {
+            MongoDumpService.doQuestionDump();
+        }
     }
 
     /**
      * @this is a socket obj;
      */
     createRoomEvent(data) {
-        var sock = this;
-
-        doMongoDump(false);
+        let sock = this;
 
         new Player({
             _id: uuid.v1({nsecs: 961}),
@@ -81,7 +85,7 @@ export default class GameModule {
         var sock = this;
 
         // Look up the game ID in the Socket.IO manager object.
-        var game = self.gameSocket.adapter.rooms[data.game];
+        var game = gameSocket.adapter.rooms[data.game];
 
         // If the game exists...
         if (game) {
@@ -106,7 +110,7 @@ export default class GameModule {
                         // Join the game
                         sock.join(data.game);
 
-                        self.gameIo.sockets.in(data.game).emit('playerJoined', {
+                        gameIo.sockets.in(data.game).emit('playerJoined', {
                             game: game._id,
                             you: nextPlayer
                         });
@@ -128,7 +132,7 @@ export default class GameModule {
 
             self.getPlayers(game).then(function (players) {
 
-                self.gameIo.sockets.in(req.game).emit('updateRoom', {
+                gameIo.sockets.in(req.game).emit('updateRoom', {
                     game: game._id,
                     players: players
                 });
@@ -150,7 +154,7 @@ export default class GameModule {
 
                     self.getPlayers(game).then(function (players) {
 
-                        self.gameIo.sockets.in(game._id).emit('updateRoom', {players: players});
+                        gameIo.sockets.in(game._id).emit('updateRoom', {players: players});
 
                     }, ehs.validate);
                 }, ehs.validate);
@@ -177,7 +181,7 @@ export default class GameModule {
             .then(function (game) {
 
                 self.startCountdown(game).then(function () {
-                    self.gameIo.sockets.in(game._id).emit('startTheBattle');
+                    gameIo.sockets.in(game._id).emit('startTheBattle');
                 })
 
             }, ehs.validate);
@@ -208,7 +212,7 @@ export default class GameModule {
 
                     Player.findOne({_id: req.player._id}).then(function (player) {
 
-                        self.gameIo.sockets.in(game._id).sockets[player.socket].emit('receiveQuestion', {
+                        gameIo.sockets.in(game._id).sockets[player.socket].emit('receiveQuestion', {
                             question: {
                                 id: question._id,
                                 text: question.question,
@@ -269,20 +273,20 @@ export default class GameModule {
 
                         if (hasMoreQuestions) {
                             //there are more questions
-                            self.gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
+                            gameIo.sockets.in(req.game).sockets[req.player.socket].emit('answerAccepted', {
                                 totalScore: player.score,
                                 isCorrect: isCorrect
                             });
                         } else {
                             //this is the last question
-                            self.gameIo.sockets.in(req.game).sockets[req.player.socket].emit('gameOver', {
+                            gameIo.sockets.in(req.game).sockets[req.player.socket].emit('gameOver', {
                                 totalScore: player.score,
                                 player: player,
                                 game: game
                             });
 
                             //send request to update score table data for other users
-                            self.gameIo.sockets.in(req.game).emit('doRefreshCycle');
+                            gameIo.sockets.in(req.game).emit('doRefreshCycle');
                         }
                     }, ehs.validate);
             }, ehs.validate);
@@ -349,7 +353,7 @@ export default class GameModule {
         var count = 3;
 
         setTimeout(function countdown() {
-            self.gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
+            gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
 
             count--;
 
@@ -369,7 +373,7 @@ export default class GameModule {
         setTimeout(function countdown() {
             score = score - 100;
 
-            self.gameIo.sockets.in(game).sockets[pSocket].emit('scoreCountdown', {
+            gameIo.sockets.in(game).sockets[pSocket].emit('scoreCountdown', {
                 score: score
             });
 
