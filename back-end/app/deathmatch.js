@@ -10,6 +10,9 @@ import MongoDumpService from './services/mongo-dump.service';
 const DO_MONGO_DUMP = false;
 const COUNTDOWN_COUNT = 3;
 const COUNTDOWN_DELAY = 1000;
+const PLAYER_START_SCORE = 60000;
+const SCORE_MIN_DEGREE = 100;
+const SCORE_COUNDOWN_DELAY = 100;
 const pSocketsScoreMap = {};
 
 let self;
@@ -195,47 +198,68 @@ export default class GameModule {
     /**
      * @this is a socket obj;
      */
-    getQuestionEvent(req) {
-        let self = this;
+    getQuestionEvent(data) {
+        let sock = this;
 
-        Game.findOne({_id: req.game}).then(function (game) {
-            ehs.assertNotNull(game);
+        if (!self.validateGameExistance(data.game, sock)) {
+            return;
+        }
 
-            var qId = null;
+        // find game object
+        Game.findOne({_id: data.game})
+            .then((game) => {
+                ehs.assertNotNull(game);
 
-            if (req.qIndex < game.questions.length) {
-                qId = game.questions[req.qIndex];
-            } else {
-                ehs.validate(new Error("Wrong qIndex: " + req.qIndex));
-            }
+                // check if question index < game questions count
+                if (data.qIndex >= game.questions.length) {
+                    console.debug(`Invalid question index - ${data.qIndex}`);
 
-            //if it's a valid question index and there is next question
-            if (qId != null) {
+                    sock.emit('error', {message: `Something went wrong - invalid question index. Seems 
+                                                    like you're going to lose this game...`});
+                    return;
+                }
 
-                Question.findOne({_id: qId}).then(function (question) {
-                    var startScore = 60000;
+                // get next question and player
+                return Promise.all([
+                    Question.findOne({_id: game.questions[data.qIndex]}),
+                    Player.findOne({_id: data.player._id})
+                ]);
 
-                    Player.findOne({_id: req.player._id}).then(function (player) {
+            }, ehs.validate)
+            .then((resolveArray) => {
 
-                        gameIo.sockets.in(game._id).sockets[player.socket].emit('receiveQuestion', {
-                            question: {
-                                id: question._id,
-                                text: question.question,
-                                possibleAnswers: question.possibleAnswers,
-                                isRadio: question.isRadio
-                            },
-                            qScore: startScore,
-                            totalScore: player.score
-                        });
+                // check resolve array (length has to be 2 - question and player)
+                if(resolveArray.length != 2) {
+                    console.debug(`Invalid resolve array length - ${resolveArray.length}`);
 
-                        self.putScoreToMap(player.socket, startScore);
+                    sock.emit('error', {message: `Something went wrong - invalid resolve array length.`});
 
-                        self.startScoreCountdown(game._id, player.socket, startScore);
+                    return;
+                }
 
-                    }, ehs.validate);
-                }, ehs.validate)
-            }
-        }, ehs.validate)
+                // get player and question from the response
+                let question = resolveArray[0];
+                let player = resolveArray[1];
+
+                // emit question object and player scores to the player
+                sock.emit('receiveQuestion', {
+                    question: {
+                        id: question._id,
+                        text: question.question,
+                        possibleAnswers: question.possibleAnswers,
+                        isRadio: question.isRadio
+                    },
+                    qScore: PLAYER_START_SCORE,
+                    totalScore: player.score
+                });
+
+                // store player score to the map
+                self.putScoreToMap(player.socket, PLAYER_START_SCORE);
+
+                // start new countdown for the new question
+                self.startScoreCountdown(sock, PLAYER_START_SCORE);
+
+            }, ehs.validate)
     }
 
     /**
@@ -368,23 +392,26 @@ export default class GameModule {
         });
     }
 
-    startScoreCountdown(game, pSocket, score) {
-        let self = this;
+    startScoreCountdown(pSocket, score) {
+        let countdown = () => {
+            // decrement score
+            score = score - SCORE_MIN_DEGREE;
 
-        setTimeout(function countdown() {
-            score = score - 100;
-
-            gameIo.sockets.in(game).sockets[pSocket].emit('scoreCountdown', {
+            // emit to player his current score value
+            pSocket.emit('scoreCountdown', {
                 score: score
             });
 
-            if (score > 0 && pSocketsScoreMap[pSocket].inAction) {
-                setTimeout(countdown, 100);
+            // if score > 0 and player still didn't answer a question - continue score countdown
+            if (score > 0 && pSocketsScoreMap[pSocket.id].inAction) {
+                setTimeout(countdown, SCORE_COUNDOWN_DELAY);
             }
 
-            self.putScoreToMap(pSocket, score);
+            // save player's score state to the map;
+            self.putScoreToMap(pSocket.id, score);
+        };
 
-        }, 100);
+        setTimeout(countdown, SCORE_COUNDOWN_DELAY);
     }
 
     get5RandomQuestionsIds(questions) {
