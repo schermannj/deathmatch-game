@@ -8,6 +8,8 @@ import MongoDumpService from './services/mongo-dump.service';
 
 
 const DO_MONGO_DUMP = false;
+const COUNTDOWN_COUNT = 3;
+const COUNTDOWN_DELAY = 1000;
 const pSocketsScoreMap = {};
 
 let self;
@@ -162,25 +164,30 @@ export default class GameModule {
      * @this is a socket obj;
      */
     allPlayersAreReady(data) {
-        let self = this;
+        if (!self.validateGameExistance(data.game, this)) {
+            return;
+        }
 
-        //TODO: implement ability to choose levels
-        self.loadQuestionsForGame(1)
-            .then(function (questions) {
+        //TODO: implement ability to choose questions level
+        Question.find({level: 1})
+            .then((questions) => {
 
                 return Game.findOneAndUpdate(
                     {_id: data.game},
                     {$set: {questions: self.get5RandomQuestionsIds(questions)}}
-                )
+                );
 
             }, ehs.validate)
-            .then(function (game) {
+            .then((game) => {
 
-                self.startCountdown(game).then(function () {
-                    gameIo.sockets.in(game._id).emit('startTheBattle');
-                })
+                // start countdown
+                return self.startCountdown(game);
 
-            }, ehs.validate);
+            }, ehs.validate)
+            .then(() => {
+                // start game when countdown has been finished
+                self.gameIo.sockets.in(data.game).emit('startTheBattle');
+            });
     }
 
     /**
@@ -330,11 +337,6 @@ export default class GameModule {
             }, ehs.validate);
     }
 
-    /** @Deprecated */
-    getPlayers(game) {
-        return Player.find({game: game});
-    }
-
     putScoreToMap(pSocket, score) {
         pSocketsScoreMap[pSocket] = {
             score: score,
@@ -343,25 +345,25 @@ export default class GameModule {
     }
 
     startCountdown(game) {
-        let self = this;
+        return new Promise((resolve) => {
+            let count = COUNTDOWN_COUNT;
 
-        var deferred = q.defer();
+            let countdownFunc = () => {
+                self.gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
 
-        var count = 3;
+                // decrement counter state
+                count--;
 
-        setTimeout(function countdown() {
-            gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
+                if (count > 0) {
+                    setTimeout(countdownFunc, COUNTDOWN_DELAY);
+                } else {
+                    resolve();
+                }
+            };
 
-            count--;
-
-            if (count > 0) {
-                setTimeout(countdown, 1000);
-            } else {
-                deferred.resolve();
-            }
-        }, 1000);
-
-        return deferred.promise;
+            // start countdown function
+            setTimeout(countdownFunc, COUNTDOWN_DELAY);
+        });
     }
 
     startScoreCountdown(game, pSocket, score) {
@@ -383,28 +385,24 @@ export default class GameModule {
         }, 100);
     }
 
-    loadQuestionsForGame(level) {
-        return Question.find({level: level});
-    }
-
     get5RandomQuestionsIds(questions) {
         if (questions.length <= 5) {
 
-            return _.map(questions, function (q) {
+            return _.map(questions, (q) => {
                 return q._id;
             });
 
         } else {
 
-            var randomQuestions = [];
-            var max = questions.length;
+            let randomQuestions = [];
+            let max = questions.length;
 
             while (randomQuestions.length < 5) {
-                var rIndex = Math.floor(Math.random() * (max + 1));
-                var rQuestionId = questions[rIndex]._id;
-                var found = false;
+                let rIndex = Math.floor(Math.random() * (max + 1));
+                let rQuestionId = questions[rIndex]._id;
+                let found = false;
 
-                for (var i = 0; i < randomQuestions.length; i++) {
+                for (let i = 0; i < randomQuestions.length; i++) {
                     if (randomQuestions[i]._id == rQuestionId) {
                         found = true;
                         break;
