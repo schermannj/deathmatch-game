@@ -88,8 +88,7 @@ export default class GameModule {
         let sock = this;
 
         // If the game exists...
-        if (!self.doesGameExist(data.game)) {
-            sock.emit('error', {message: "This game does not exist anymore."});
+        if (!self.validateGameExistance(data.game, sock)) {
             return;
         }
 
@@ -105,7 +104,7 @@ export default class GameModule {
                 finish: false
             })
             .save()
-            .then(function (player) {
+            .then((player) => {
                 // join the new player to the game
                 sock.join(data.game);
 
@@ -124,10 +123,10 @@ export default class GameModule {
     refreshRoom(data) {
         // find all players who belongs to this game
         Player.find({game: data.game})
-            .then(function (players) {
+            .then((players) => {
 
                 // send event to all players from this game
-                gameIo.sockets.in(data.game).emit('updateRoom', {
+                self.gameIo.sockets.in(data.game).emit('updateRoom', {
                     game: data.game,
                     players: players
                 });
@@ -139,22 +138,24 @@ export default class GameModule {
      * @this is a socket obj;
      */
     playerIsReadyEvent(data) {
-        let self = this;
+        if (!self.validateGameExistance(data.game, this)) {
+            return;
+        }
 
-        Game.findOne({_id: data.game}).then(function (game) {
+        // find player with specific id and game and update his ready status
+        Player.findOneAndUpdate({_id: data.player._id, game: data.game}, {$set: {ready: true}})
+            .then(() => {
 
-            if (_.contains(game.players, data.player._id)) {
+                // find all players from that game
+                return Player.find({game: data.game});
 
-                Player.findOneAndUpdate({_id: data.player._id}, {$set: {ready: true}}).then(function () {
+            }, ehs.validate)
+            .then((players) => {
 
-                    self.getPlayers(game).then(function (players) {
+                // send updated status to all players from the game
+                self.gameIo.sockets.in(data.game).emit('updateRoom', {players: players});
 
-                        gameIo.sockets.in(game._id).emit('updateRoom', {players: players});
-
-                    }, ehs.validate);
-                }, ehs.validate);
-            }
-        }, ehs.validate)
+            }, ehs.validate);
     }
 
     /**
@@ -421,5 +422,15 @@ export default class GameModule {
     doesGameExist(game) {
         // Look up the game ID in the Socket.IO manager object.
         return self.gameSocket.adapter.rooms[game];
+    }
+
+    validateGameExistance(game, sock) {
+        if (!self.doesGameExist(game)) {
+            sock.emit('error', {message: "This game does not exist anymore."});
+
+            return false;
+        }
+
+        return true;
     }
 }
