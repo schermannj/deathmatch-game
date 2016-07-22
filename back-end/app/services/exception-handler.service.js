@@ -1,5 +1,9 @@
 export default class ExceptionHandlerService {
 
+    constructor(gameSocket) {
+        this.gameSocket = gameSocket;
+    }
+
     static validate(err) {
         if (err) {
             throw new Error("Cause: " + err);
@@ -10,5 +14,20 @@ export default class ExceptionHandlerService {
         if (!obj) {
             throw new Error("Object " + obj + " can't be null!");
         }
+    }
+
+    doesGameExist(game) {
+        // Look up the game ID in the Socket.IO manager object.
+        return this.gameSocket.adapter.rooms[game];
+    }
+
+    validateGameExistence(game, sock) {
+        if (!this.doesGameExist(game)) {
+            sock.emit('error', {message: "This game does not exist anymore."});
+
+            return false;
+        }
+
+        return true;
     }
 }
