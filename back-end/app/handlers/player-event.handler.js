@@ -3,6 +3,7 @@ import Game from '../models/Game';
 import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
+import {STATE} from "../config/constants";
 
 const COUNTDOWN_COUNT = 3;
 const COUNTDOWN_DELAY = 1000;
@@ -17,6 +18,23 @@ export default class PlayerEventHandler {
         self.ehs = ehs;
 
         gameSocket.on('disconnect', this.playerLeaveEvent);
+
+        gameSocket.on('reconnect', (data) => {
+            console.log(data);
+        });
+
+        gameSocket.on('reconnect_attempt', (data) => {
+            console.log(data);
+        });
+
+        gameSocket.on('reconnect_error', (data) => {
+            console.log(data);
+        });
+
+        gameSocket.on('reconnect_failed', (data) => {
+            console.log(data);
+        });
+
         gameSocket.on('playerIsReady', this.playerIsReadyEvent);
         gameSocket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
     }
@@ -25,37 +43,51 @@ export default class PlayerEventHandler {
      * @this is a socket obj;
      */
     playerIsReadyEvent(data) {
+        let sock = this;
+
         if (!self.ehs.validateGameExistence(data.game, this)) {
             return;
         }
 
         // find player with specific id and game and update his ready status
-        Player.findOneAndUpdate({_id: data.player._id, game: data.game}, {$set: {ready: true}})
+        Player.findOneAndUpdate({_id: data.player._id, game: data.game}, {$set: {state: STATE.READY}})
             .then(() => {
 
-                // find all players from that game
-                return Player.find({game: data.game});
+                // find all players from that game who isn't disconnected
+                return Player.find({game: data.game, $or: [{state: STATE.READY}, {state: STATE.CONNECTED}]});
 
             }, ExceptionHandlerService.validate)
             .then((players) => {
 
-                // send updated status to all players from the game
+                // send updated status to all active players from the game
                 self.gameIo.sockets.in(data.game).emit('updateRoom', {players: players});
 
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     /**
      * @this is a socket obj;
      */
     allPlayersAreReadyEvent(data) {
+        let sock = this;
+
         if (!self.ehs.validateGameExistence(data.game, this)) {
             return;
         }
 
-        //TODO: implement ability to choose questions level
-        // find all questions for a specific level
-        Question.find({level: 1})
+        Player.update(
+            {game: data.game, $ne: {state: STATE.DISCONNECTED}},
+            {$set: {state: STATE.STARTED}},
+            {multi: true}
+        ).then(() => {
+            //TODO: implement ability to choose questions level
+            // find all questions for a specific level
+            return Question.find({level: 1});
+
+        }, ExceptionHandlerService.validate)
             .then((questions) => {
 
                 // save 5 random selected questions to the game object
@@ -74,14 +106,44 @@ export default class PlayerEventHandler {
             .then(() => {
                 // start game when countdown has been finished
                 self.gameIo.sockets.in(data.game).emit('startTheBattle');
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     /**
      * @this is a socket obj;
      */
     playerLeaveEvent() {
-        Player.findOneAndUpdate({socket: this.id}, {$set: {disconnected: true}}, {new: true});
+        // update disconnected player and set disconnect status to 'true'
+        Player.findOneAndUpdate({socket: this.id}, {$set: {disconnected: true}}, {new: true})
+            .then((disconnectedPlayer) => {
+                // find all players who didn't leave the game
+                return Player.find({game: disconnectedPlayer.game, $ne: {state: STATE.DISCONNECTED}});
+
+            }, ExceptionHandlerService.validate)
+            .then((players) => {
+                // if game didn't start, then send event to wait-room, else to score-table-room
+                let didGameStart = _.find(players, (player) => player.state === STATE.STARTED);
+                if(didGameStart) {
+                    // find finished players
+                    let finishedPlayers = _.filter(players, (player) => {
+                        return player.state === STATE.FINISHED;
+                    });
+
+                    // emit an event and update score table data for all finished players from this game
+                    for(let player of finishedPlayers) {
+                        self.gameIo.to(player.socket).emit('doRefreshCycle');
+                    }
+                } else if (players.length > 0) {
+                    // if there are some players and game didn't start, send them an event and update room
+                    self.gameIo.sockets.in(players.shift().game).emit('updateRoom', {players: players});
+                }
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                console.debug(err.message);
+            });
     }
 
     startCountdown(game) {

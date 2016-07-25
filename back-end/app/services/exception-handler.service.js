@@ -16,6 +16,10 @@ export default class ExceptionHandlerService {
         }
     }
 
+    static emitError(sock, err) {
+        sock.emit('error', {message: err.message});
+    }
+
     doesGameExist(game) {
         // Look up the game ID in the Socket.IO manager object.
         return this.gameSocket.adapter.rooms[game];
@@ -23,6 +27,7 @@ export default class ExceptionHandlerService {
 
     validateGameExistence(game, sock) {
         if (!this.doesGameExist(game)) {
+            console.debug(game, sock);
             sock.emit('error', {message: "This game does not exist anymore."});
 
             return false;

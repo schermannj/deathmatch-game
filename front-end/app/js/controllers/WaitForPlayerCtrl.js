@@ -26,7 +26,7 @@ function WaitForPlayerCtrl($state, socket, $scope) {
         .on('startCountdown', function (resp) {
             $('.container').append('<h3>Game will start in ' + resp.counter + ' !</h3>')
         })
-        .on('startTheBattle', function () {
+        .once('startTheBattle', function () {
             $state.go('game', {
                 player: vm.you,
                 game: vm.game
@@ -35,7 +35,7 @@ function WaitForPlayerCtrl($state, socket, $scope) {
 
 
     function checkIfAllPlayersAreReady() {
-        var allAreReady = _.where(vm.players, {ready: false}).length == 0;
+        var allAreReady = _.where(vm.players, {state: 'CONNECTED'}).length == 0;
 
         if (allAreReady) {
             socket.io().emit('allPlayersAreReady', {game: vm.game});

@@ -11,7 +11,11 @@ function socket(Config) {
 
     function io(recreate) {
         if(!_io || recreate) {
-            _io = window['io'](Config.WS_SERVER_URL);
+            _io = window['io'](Config.WS_SERVER_URL, {
+                reconnection: true,
+                reconnectionDelay: 500,
+                reconnectionAttempts: 3
+            });
         }
 
         return _io;

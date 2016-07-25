@@ -1,7 +1,9 @@
+import uuid from 'uuid';
 import * as _ from 'lodash';
 import Game from '../models/Game';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
+import {STATE} from '../config/constants'
 
 let self;
 export default class RoomEventHandler {
@@ -27,6 +29,7 @@ export default class RoomEventHandler {
 
         // create a game instance
         new Game({
+                _id: uuid.v1({nsecs: 961}),
                 questions: [],
                 level: data.level ? data.level : 1
             })
@@ -37,10 +40,12 @@ export default class RoomEventHandler {
 
                 // create joined player and save it to db
                 return new Player({
+                    _id: uuid.v1({nsecs: 961}),
                     name: data.username,
                     game: game._id,
                     isAdmin: true,
                     socket: sock.id,
+                    state: STATE.CONNECTED
                 }).save();
 
             }, ExceptionHandlerService.validate)
@@ -54,7 +59,10 @@ export default class RoomEventHandler {
                     you: player
                 });
 
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     /**
@@ -70,9 +78,11 @@ export default class RoomEventHandler {
 
         // create new player
         new Player({
+                _id: uuid.v1({nsecs: 961}),
                 name: data.username,
                 game: data.game,
                 socket: sock.id,
+                state: STATE.CONNECTED
             })
             .save()
             .then((player) => {
@@ -85,13 +95,18 @@ export default class RoomEventHandler {
                     you: player
                 });
 
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     /**
      * @this is a socket obj;
      */
     refreshRoomEvent(data) {
+        let sock = this;
+
         // find all players who belongs to this game
         Player.find({game: data.game})
             .then((players) => {
@@ -102,7 +117,10 @@ export default class RoomEventHandler {
                     players: players
                 });
 
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     /**
@@ -118,14 +136,15 @@ export default class RoomEventHandler {
         Player.find({game: data.game})
             .then((players) => {
 
-                // find players who finished the game
-                let finishedPlayers = _.filter(players, (player) => player.finish);
+                // find players who finished the game or disconnected players
+                let finishedPlayers = _.filter(players, (player) => player.finish || player.disconnected);
 
                 //collect score table data
                 let scoreTableData = _.map(finishedPlayers, (player) => {
                     return {
                         name: player.name,
-                        score: player.score
+                        score: player.score,
+                        disconnected: player.disconnected
                     }
                 });
 
@@ -142,6 +161,9 @@ export default class RoomEventHandler {
                 //send new data
                 sock.emit('refreshScoreTable', resp);
 
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 }

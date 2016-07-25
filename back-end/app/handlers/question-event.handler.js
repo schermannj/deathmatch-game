@@ -3,6 +3,7 @@ import Game from '../models/Game';
 import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
+import {STATE} from "../config/constants";
 
 const PLAYER_START_SCORE = 60000;
 const SCORE_MIN_DEGREE = 100;
@@ -87,6 +88,9 @@ export default class QuestionEventHandler {
                 self.startScoreCountdown(sock, PLAYER_START_SCORE);
 
             }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     /**
@@ -142,7 +146,7 @@ export default class QuestionEventHandler {
 
                 // if there isn't more questions player finish state will be set to 'true'
                 if (!hasMoreQuestions) {
-                    updateDocument['$set'] = {finish: true};
+                    updateDocument['$set'] = {state: STATE.FINISHED};
                 }
 
                 // update player info and return updated document
@@ -169,7 +173,10 @@ export default class QuestionEventHandler {
                     // emit an event and update score table data for other users from this game
                     self.gameIo.sockets.in(data.game).emit('doRefreshCycle');
                 }
-            }, ExceptionHandlerService.validate);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                ExceptionHandlerService.emitError(sock, err);
+            });
     }
 
     startScoreCountdown(pSocket, score) {
