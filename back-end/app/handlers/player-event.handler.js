@@ -80,8 +80,10 @@ export default class PlayerEventHandler {
             return;
         }
 
+        // make game unavailable
         Game.update({_id: data.game}, {$set: {available: false}})
             .then(() => {
+                // set players' states to 'STARTED'
                 return Player.update(
                     {game: data.game, state: {$ne: STATE.DISCONNECTED}},
                     {$set: {state: STATE.STARTED}},
