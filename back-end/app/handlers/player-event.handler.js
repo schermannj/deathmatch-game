@@ -20,23 +20,6 @@ export default class PlayerEventHandler {
         self.ehs = ehs;
 
         gameSocket.on('disconnect', this.playerLeaveEvent);
-
-        gameSocket.on('reconnect', (data) => {
-            self.log.debug(data);
-        });
-
-        gameSocket.on('reconnect_attempt', (data) => {
-            self.log.debug(data);
-        });
-
-        gameSocket.on('reconnect_error', (data) => {
-            self.log.debug(data);
-        });
-
-        gameSocket.on('reconnect_failed', (data) => {
-            self.log.debug(data);
-        });
-
         gameSocket.on('playerIsReady', this.playerIsReadyEvent);
         gameSocket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
     }
