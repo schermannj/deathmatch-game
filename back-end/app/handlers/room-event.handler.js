@@ -82,18 +82,27 @@ export default class RoomEventHandler {
         Game.findOne({_id: data.game})
             .then((game) => {
                 if(game.available) {
-                    // create new player
-                    return new Player({
-                        _id: uuid.v1({nsecs: 961}),
-                        name: data.username,
-                        game: data.game,
-                        socket: sock.id,
-                        state: STATE.CONNECTED
-                    }).save();
 
+                    // check player name
+                    return Player.findOne({game: data.game, name: data.username});
                 } else {
                     throw new Error("Game isn't available!")
                 }
+            })
+            .then((player) => {
+                // if player with this name exists then throw the error
+                if (player) {
+                    throw new Error('Player with this name already exists.');
+                }
+
+                // create new player
+                return new Player({
+                    _id: uuid.v1({nsecs: 961}),
+                    name: data.username,
+                    game: data.game,
+                    socket: sock.id,
+                    state: STATE.CONNECTED
+                }).save();
             })
             .then((player) => {
                 // join the new player to the game
