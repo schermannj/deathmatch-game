@@ -5,6 +5,8 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
+const extractStylePlugin = new ExtractTextPlugin('[name].css', {disable: false});
+
 module.exports = {
     entry: {
         main: path.join(__dirname, 'src/main.ts'),
@@ -40,9 +42,21 @@ module.exports = {
                 loader: 'file?name=assets/[name].[hash].[ext]'
             },
             {
-                test: /\.(css|scss)$/,
-                loader: ExtractTextPlugin.extract('style', 'css?sourceMap')
+                test: /\.css$/,
+                loader: "style!css"
+            },
+            {
+                test: /\.scss$/,
+                loader: "style!css!autoprefixer!sass"
             }
+            // {
+            //     test: /\.scss$/,
+            //     loader: ExtractTextPlugin.extract('style!css!autoprefixer', 'sass')
+            // },
+            // {
+            //     test: /\.css$/,
+            //     loader: ExtractTextPlugin.extract('style', 'css')
+            // }
         ]
     },
 

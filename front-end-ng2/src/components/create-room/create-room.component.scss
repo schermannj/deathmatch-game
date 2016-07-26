@@ -1,0 +1,28 @@
+body {
+  background-color: #009688;
+
+  .main-container {
+    background-color: #FFFFFF;
+    margin: 15% 0 0 25%;
+    width: 50%;
+
+    md-card {
+      padding: 0;
+
+      md-toolbar {
+        background-color: #00796B;
+        width: 100%;
+        color: #FFFFFF;
+        font-family: Roboto, "Helvetica Neue", sans-serif;
+        font-weight: bold;
+      }
+
+      md-input {
+        margin: 5% 0 5% 5%;
+        width: 90%;
+        font-size: 30px;
+        overflow: visible;
+      }
+    }
+  }
+}

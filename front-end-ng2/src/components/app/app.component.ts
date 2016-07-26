@@ -1,13 +1,17 @@
-import { Component } from '@angular/core';
+import {Component} from "@angular/core";
+import './app.component.scss';
+import {CreateRoomComponent} from "../create-room/create-room.component";
+// import {ROUTER_DIRECTIVES} from "@angular/router";
 
 @Component({
     selector: 'my-app',
     templateUrl: './app.component.html',
-    styles: ['./app.component.css']
+    providers: [],
+    // directives: [ROUTER_DIRECTIVES]
+    directives: [CreateRoomComponent]
 })
 export class AppComponent {
-    constructor() {
-        console.log("kek");
-    }
 
+    constructor() {
+    }
 }
