@@ -6,6 +6,7 @@ export const STATE = {
     FINISHED: 'FINISHED',
     DISCONNECTED: 'DISCONNECTED'
 };
+export const DO_MONGO_DUMP = false;
 export const ID_MIXIN = 961;
 export const COUNTDOWN_COUNT = 3;
 export const COUNTDOWN_DELAY = 1000;

@@ -48,5 +48,19 @@ export default class MongoDumpService {
             level: 1
         }).save();
 
+        new Question({
+            question: "Lesik dalbaeb?",
+            possibleAnswers: [
+                {index: 1, text: "da"},
+                {index: 2, text: "da"},
+                {index: 3, text: "da"},
+                {index: 4, text: "net"}
+            ],
+            isRadio: true,
+            rightAnswers: [1,2,3],
+            tags: ["general"],
+            level: 1
+        }).save();
+
     }
 }

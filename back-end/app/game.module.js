@@ -1,7 +1,6 @@
 import MongoDumpService from "./services/mongo-dump.service";
 import GameEventHandler from "./handlers/game-event.handler";
-
-const DO_MONGO_DUMP = false;
+import {DO_MONGO_DUMP} from './config/constants';
 
 export default class GameModule {
 
