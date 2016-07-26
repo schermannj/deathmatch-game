@@ -133,7 +133,7 @@ export default class QuestionEventHandler {
                 let answersIntersection = _.intersection(question.rightAnswers, data.q.answer);
 
                 // if right answers contain player answer then player answer is correct, in other case player score = 0
-                if (question.rightAnswers.length == answersIntersection.length) {
+                if (question.rightAnswers.length == answersIntersection.length && question.rightAnswers.length == data.q.answer.length) {
                     isCorrect = true;
                 } else {
                     pScore = 0;
