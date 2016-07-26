@@ -11,7 +11,5 @@ export default class GameModule {
         }
 
         new GameEventHandler(io, socket);
-
-        socket.emit('connected', {message: "You are connected!"});
     }
 }

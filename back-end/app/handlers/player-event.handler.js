@@ -3,11 +3,8 @@ import Game from '../models/Game';
 import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
-import {STATE} from "../config/constants";
+import {STATE, COUNTDOWN_COUNT, COUNTDOWN_DELAY} from "../config/constants";
 import * as log4js from 'log4js';
-
-const COUNTDOWN_COUNT = 3;
-const COUNTDOWN_DELAY = 1000;
 
 let self;
 export default class PlayerEventHandler {

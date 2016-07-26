@@ -1,11 +1,16 @@
 import mongoose from '../components/mongoose';
+import {ID_MIXIN} from "../config/constants";
+import uuid from 'uuid';
 
 const Schema = mongoose.Schema;
 
 const GameSchema = new Schema({
     _id: {
         type: String,
-        required: true
+        required: true,
+        default: () => {
+            return uuid.v1({nsecs: ID_MIXIN});
+        }
     },
     questions: {
         type: [String]

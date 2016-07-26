@@ -3,12 +3,9 @@ import Game from '../models/Game';
 import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
-import {STATE} from "../config/constants";
+import {STATE, PLAYER_START_SCORE, SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY} from "../config/constants";
 import * as log4js from 'log4js';
 
-const PLAYER_START_SCORE = 60000;
-const SCORE_MIN_DEGREE = 100;
-const SCORE_COUNTDOWN_DELAY = 100;
 const pSocketsScoreMap = {};
 
 let self;
