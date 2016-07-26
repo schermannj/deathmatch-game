@@ -3,7 +3,8 @@ import * as _ from 'lodash';
 import Game from '../models/Game';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
-import {STATE} from '../config/constants'
+import {STATE} from '../config/constants';
+import * as log4js from 'log4js';
 
 let self;
 export default class RoomEventHandler {
@@ -11,6 +12,7 @@ export default class RoomEventHandler {
     constructor(gameIo, gameSocket, ehs) {
         self = this;
 
+        self.log = log4js.getLogger();
         self.gameIo = gameIo;
         self.ehs = ehs;
 
@@ -76,15 +78,23 @@ export default class RoomEventHandler {
             return;
         }
 
-        // create new player
-        new Player({
-                _id: uuid.v1({nsecs: 961}),
-                name: data.username,
-                game: data.game,
-                socket: sock.id,
-                state: STATE.CONNECTED
+        // check if game is available now
+        Game.findOne({_id: data.game})
+            .then((game) => {
+                if(game.available) {
+                    // create new player
+                    return new Player({
+                        _id: uuid.v1({nsecs: 961}),
+                        name: data.username,
+                        game: data.game,
+                        socket: sock.id,
+                        state: STATE.CONNECTED
+                    }).save();
+
+                } else {
+                    throw new Error("Game isn't available!")
+                }
             })
-            .save()
             .then((player) => {
                 // join the new player to the game
                 sock.join(data.game);
@@ -108,7 +118,7 @@ export default class RoomEventHandler {
         let sock = this;
 
         // find all players who belongs to this game
-        Player.find({game: data.game})
+        Player.find({game: data.game, state: {$ne: STATE.DISCONNECTED}})
             .then((players) => {
 
                 // send event to all players from this game
@@ -137,14 +147,16 @@ export default class RoomEventHandler {
             .then((players) => {
 
                 // find players who finished the game or disconnected players
-                let finishedPlayers = _.filter(players, (player) => player.finish || player.disconnected);
+                let finishedPlayers = _.filter(players, (player) => {
+                    return player.state === STATE.FINISHED || player.state === STATE.DISCONNECTED;
+                });
 
                 //collect score table data
                 let scoreTableData = _.map(finishedPlayers, (player) => {
                     return {
                         name: player.name,
                         score: player.score,
-                        disconnected: player.disconnected
+                        state: player.state
                     }
                 });
 
@@ -155,7 +167,7 @@ export default class RoomEventHandler {
 
                 // if all players finished the game then we're gonna look for the winner
                 if (players.length === finishedPlayers.length) {
-                    resp.winner = _.max(players, (player) => player.score);
+                    resp.winner = _.maxBy(players, (player) => player.score);
                 }
 
                 //send new data

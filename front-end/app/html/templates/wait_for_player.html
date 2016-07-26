@@ -6,7 +6,7 @@
         <button class="btn btn-success" ng-click="vm.doReady()">I'm ready!</button>
     </div>
     <table class="table table-hover">
-        <tr  ng-repeat="player in vm.players" ng-class="{'success': player.ready}">
+        <tr  ng-repeat="player in vm.players" ng-class="{'success': player.state === 'READY'}">
             <td>{{$index}}</td>
             <td>{{player.name}}</td>
         </tr>

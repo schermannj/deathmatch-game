@@ -11,30 +11,14 @@ function JoinCtrl($state, socket) {
 
     vm.joinRoom = joinRoom;
 
-    socket.io()
-        .on('error', function (resp) {
-            alert(resp.message);
-        })
-        .on('disconnect', function (resp) {
-            console.log('disconnect ' + resp)
-        })
-        .on('reconnect', function (resp) {
-            console.log('reconnect ' + resp)
-        })
-        .on('reconnect_failed', function (resp) {
-            console.log('reconnect_failed ' + resp)
-        })
-        .on('reconnecting', function (resp) {
-            console.log('reconnecting ' + resp)
-        })
-        .once('roomCreated', function (resp) {
-            $state.go('wait-for-player', resp)
-        })
-        .once('playerJoined', function (resp) {
-            $state.go('wait-for-player', resp);
-        });
-
     function joinRoom(game, username) {
-        socket.io().emit('joinRoom', {game: game, username: username});
+        socket.io(true)
+            .on('serverError', function (resp) {
+                alert(resp.message);
+            })
+            .once('playerJoined', function (resp) {
+                $state.go('wait-for-player', resp);
+            })
+            .emit('joinRoom', {game: game, username: username});
     }
 }

@@ -16,6 +16,10 @@ const GameSchema = new Schema({
     created: {
         type: Date,
         default: Date.now()
+    },
+    available: {
+        type: Boolean,
+        default: true
     }
 });
 

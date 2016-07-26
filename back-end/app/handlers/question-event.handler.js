@@ -4,6 +4,7 @@ import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
 import {STATE} from "../config/constants";
+import * as log4js from 'log4js';
 
 const PLAYER_START_SCORE = 60000;
 const SCORE_MIN_DEGREE = 100;
@@ -16,6 +17,7 @@ export default class QuestionEventHandler {
     constructor(gameIo, gameSocket, ehs) {
         self = this;
 
+        self.log = log4js.getLogger();
         self.gameIo = gameIo;
         self.ehs = ehs;
 
@@ -40,9 +42,9 @@ export default class QuestionEventHandler {
 
                 // check if question index < game questions count
                 if (data.qIndex >= game.questions.length) {
-                    console.debug(`Invalid question index - ${data.qIndex}`);
+                    self.log.debug(`Invalid question index - ${data.qIndex}`);
 
-                    sock.emit('error', {message: `Something went wrong - invalid question index. Seems 
+                    sock.emit('serverError', {message: `Something went wrong - invalid question index. Seems 
                                                     like you're going to lose this game...`});
                     return;
                 }
@@ -58,9 +60,9 @@ export default class QuestionEventHandler {
 
                 // check resolve array (length has to be 2 - question and player)
                 if(resolveArray.length != 2) {
-                    console.debug(`Invalid resolve array length - ${resolveArray.length}`);
+                    self.log.debug(`Invalid resolve array length - ${resolveArray.length}`);
 
-                    sock.emit('error', {message: `Something went wrong - invalid resolve array length.`});
+                    sock.emit('serverError', {message: `Something went wrong - invalid resolve array length.`});
 
                     return;
                 }
@@ -114,9 +116,9 @@ export default class QuestionEventHandler {
 
                 // check resolve array (length has to be 2 - game and question)
                 if(resolveArray.length != 2) {
-                    console.debug(`Invalid resolve array length - ${resolveArray.length}`);
+                    self.log.debug(`Invalid resolve array length - ${resolveArray.length}`);
 
-                    sock.emit('error', {message: `Something went wrong - invalid resolve array length.`});
+                    sock.emit('serverError', {message: `Something went wrong - invalid resolve array length.`});
 
                     return;
                 }

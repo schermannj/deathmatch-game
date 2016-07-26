@@ -1,6 +1,9 @@
+import * as log4js from 'log4js';
+
 export default class ExceptionHandlerService {
 
     constructor(gameSocket) {
+        this.log = log4js.getLogger();
         this.gameSocket = gameSocket;
     }
 
@@ -17,7 +20,7 @@ export default class ExceptionHandlerService {
     }
 
     static emitError(sock, err) {
-        sock.emit('error', {message: err.message});
+        sock.emit('serverError', {message: err.message});
     }
 
     doesGameExist(game) {
@@ -27,8 +30,7 @@ export default class ExceptionHandlerService {
 
     validateGameExistence(game, sock) {
         if (!this.doesGameExist(game)) {
-            console.debug(game, sock);
-            sock.emit('error', {message: "This game does not exist anymore."});
+            sock.emit('serverError', {message: "This game does not exist."});
 
             return false;
         }

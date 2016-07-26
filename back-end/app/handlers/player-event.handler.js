@@ -4,6 +4,7 @@ import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
 import {STATE} from "../config/constants";
+import * as log4js from 'log4js';
 
 const COUNTDOWN_COUNT = 3;
 const COUNTDOWN_DELAY = 1000;
@@ -14,25 +15,26 @@ export default class PlayerEventHandler {
     constructor(gameIo, gameSocket, ehs) {
         self = this;
 
+        self.log = log4js.getLogger();
         self.gameIo = gameIo;
         self.ehs = ehs;
 
         gameSocket.on('disconnect', this.playerLeaveEvent);
 
         gameSocket.on('reconnect', (data) => {
-            console.log(data);
+            self.log.debug(data);
         });
 
         gameSocket.on('reconnect_attempt', (data) => {
-            console.log(data);
+            self.log.debug(data);
         });
 
         gameSocket.on('reconnect_error', (data) => {
-            console.log(data);
+            self.log.debug(data);
         });
 
         gameSocket.on('reconnect_failed', (data) => {
-            console.log(data);
+            self.log.debug(data);
         });
 
         gameSocket.on('playerIsReady', this.playerIsReadyEvent);
@@ -78,16 +80,20 @@ export default class PlayerEventHandler {
             return;
         }
 
-        Player.update(
-            {game: data.game, $ne: {state: STATE.DISCONNECTED}},
-            {$set: {state: STATE.STARTED}},
-            {multi: true}
-        ).then(() => {
-            //TODO: implement ability to choose questions level
-            // find all questions for a specific level
-            return Question.find({level: 1});
+        Game.update({_id: data.game}, {$set: {available: false}})
+            .then(() => {
+                return Player.update(
+                    {game: data.game, state: {$ne: STATE.DISCONNECTED}},
+                    {$set: {state: STATE.STARTED}},
+                    {multi: true}
+                );
+            })
+            .then(() => {
+                //TODO: implement ability to choose questions level
+                // find all questions for a specific level
+                return Question.find({level: 1});
 
-        }, ExceptionHandlerService.validate)
+            }, ExceptionHandlerService.validate)
             .then((questions) => {
 
                 // save 5 random selected questions to the game object
@@ -106,6 +112,7 @@ export default class PlayerEventHandler {
             .then(() => {
                 // start game when countdown has been finished
                 self.gameIo.sockets.in(data.game).emit('startTheBattle');
+
             }, ExceptionHandlerService.validate)
             .catch((err) => {
                 ExceptionHandlerService.emitError(sock, err);
@@ -117,15 +124,24 @@ export default class PlayerEventHandler {
      */
     playerLeaveEvent() {
         // update disconnected player and set disconnect status to 'true'
-        Player.findOneAndUpdate({socket: this.id}, {$set: {disconnected: true}}, {new: true})
+        Player.findOneAndUpdate({socket: this.id}, {$set: {state: STATE.DISCONNECTED}}, {new: true})
             .then((disconnectedPlayer) => {
+
+                // if game doesn't exist - ignore it.
+                if (!self.ehs.doesGameExist(disconnectedPlayer.game)) {
+                    return;
+                }
+
                 // find all players who didn't leave the game
-                return Player.find({game: disconnectedPlayer.game, $ne: {state: STATE.DISCONNECTED}});
+                return Player.find({game: disconnectedPlayer.game, state: {$ne: STATE.DISCONNECTED}});
 
             }, ExceptionHandlerService.validate)
             .then((players) => {
                 // if game didn't start, then send event to wait-room, else to score-table-room
-                let didGameStart = _.find(players, (player) => player.state === STATE.STARTED);
+                let didGameStart = _.find(players, (player) => {
+                    return player.state === STATE.STARTED || player.state === STATE.FINISHED;
+                });
+
                 if(didGameStart) {
                     // find finished players
                     let finishedPlayers = _.filter(players, (player) => {
@@ -138,11 +154,11 @@ export default class PlayerEventHandler {
                     }
                 } else if (players.length > 0) {
                     // if there are some players and game didn't start, send them an event and update room
-                    self.gameIo.sockets.in(players.shift().game).emit('updateRoom', {players: players});
+                    self.gameIo.sockets.in(players[0].game).emit('updateRoom', {players: players});
                 }
             }, ExceptionHandlerService.validate)
             .catch((err) => {
-                console.debug(err.message);
+                self.log.debug(err.message);
             });
     }
 
