@@ -7,16 +7,18 @@ import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
 import RestService from "../../services/rest.service";
 import {IRoomCreatedResponse, IPlayer, IUpdateRoomResponse} from "../../util/app.Interfaces";
 import * as _ from 'lodash';
+import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 
 @Component({
     selector: 'waiting-root',
     templateUrl: './waiting-room.component.html',
-    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES]
+    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES, MD_BUTTON_DIRECTIVES]
 })
 export class WaitingRoomComponent {
     private game: String;
     private you: IPlayer;
     private players: Array<any>;
+    public isPlayerReady: boolean = false;
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -64,19 +66,24 @@ export class WaitingRoomComponent {
         });
     }
 
+    public doReady() {
+        this.isPlayerReady = true;
+        this.socket.io().emit('playerIsReady', {game: this.game, player: this.you});
+    }
+
+    public copyLinkToJoinRoom() {
+
+    }
+
+    private refreshRoom() {
+        this.socket.io().emit('refreshRoom', {game: this.game});
+    }
+
     private checkIfAllPlayersAreReady() {
         let allAreReady = _.filter(this.players, (player: IPlayer) => player.state === 'CONNECTED').length == 0;
 
         if (allAreReady) {
             this.socket.io().emit('allPlayersAreReady', {game: this.game});
         }
-    }
-
-    public doReady() {
-        this.socket.io().emit('playerIsReady', {game: this.game, player: this.you});
-    }
-
-    private refreshRoom() {
-        this.socket.io().emit('refreshRoom', {game: this.game});
     }
 }

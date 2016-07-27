@@ -1,2 +1,26 @@
-<h1>waiting room</h1>
+<div class="waiting-room">
+    <md-card>
+        <md-toolbar>
+            <span>
+                Hi, {{you?.name}}. Press 'Ready' button, when you will be ready to start.
+            </span>
+            <span class="fill-remaining-space"></span>
+            <button md-raised-button (click)="copyLinkToJoinRoom()">INVITE</button>
+            <button md-raised-button (click)="doReady()" [disabled]="isPlayerReady">READY</button>
+        </md-toolbar>
+        <md-card-content>
+            <table class="table table-hover">
+                <tr>
+                    <th>Player</th>
+                    <th>Status</th>
+                </tr>
+                <tr *ngFor="let player of players"
+                    [ngClass]="{'success': player.state === 'READY', 'warning': player.state !== 'READY'}">
+                    <td>{{player.name}}</td>
+                    <td>{{player.state}}</td>
+                </tr>
+            </table>
+        </md-card-content>
+    </md-card>
+</div>
 <router-outlet></router-outlet>
