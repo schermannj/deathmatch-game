@@ -5,7 +5,7 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-const extractStylePlugin = new ExtractTextPlugin('[name].css', {disable: false});
+// const extractStylePlugin = new ExtractTextPlugin('[name].css', {disable: false});
 
 module.exports = {
     entry: {
