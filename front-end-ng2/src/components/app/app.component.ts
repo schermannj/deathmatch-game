@@ -1,14 +1,17 @@
 import {Component} from "@angular/core";
-import './app.component.scss';
+import "./app.component.scss";
 import {CreateRoomComponent} from "../create-room/create-room.component";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES} from "@angular/router";
+import RestService from "../../services/rest.service";
+import {HTTP_PROVIDERS} from "@angular/http";
+import {WaitingRoomComponent} from "../waiting-room/waiting-room.component";
 
 @Component({
     selector: 'my-app',
     templateUrl: './app.component.html',
-    providers: [SocketService],
-    precompile: [CreateRoomComponent],
+    providers: [SocketService, RestService, HTTP_PROVIDERS],
+    precompile: [CreateRoomComponent, WaitingRoomComponent],
     directives: [ROUTER_DIRECTIVES, CreateRoomComponent]
 })
 export class AppComponent {

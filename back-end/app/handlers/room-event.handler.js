@@ -55,7 +55,7 @@ export default class RoomEventHandler {
                 // send event to FE, to the joined player
                 sock.emit('roomCreated', {
                     game: savedGame._id,
-                    you: player
+                    player: player._id
                 });
 
             }, ExceptionHandlerService.validate)

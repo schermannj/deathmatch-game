@@ -2,6 +2,7 @@ const logger = require('morgan');
 const cors = require('cors');
 const io = require('socket.io')(3001);
 import GameModule from './app/game.module';
+import HttpRequestHandler from "./app/handlers/http-request.handler";
 const express = require('express');
 const debug = require('debug')('back-end:server');
 const http = require('http');
@@ -26,6 +27,11 @@ app.use(cors({
         credentials: true
     })
 );
+
+/**
+ * Register http handler
+ */
+new HttpRequestHandler(app);
 
 
 /**
