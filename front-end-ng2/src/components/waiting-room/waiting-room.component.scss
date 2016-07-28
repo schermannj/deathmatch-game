@@ -22,5 +22,11 @@
         flex: 1 1 auto;
       }
     }
+
+    md-card-content {
+      th {
+        width: 50%;
+      }
+    }
   }
 }
