@@ -5,12 +5,12 @@ import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
 import RestService from "../../services/rest.service";
-import {IRoomCreatedResponse, IPlayer, IUpdateRoomResponse} from "../../util/app.Interfaces";
+import {IPlayerJoinedRoomResponse, IPlayer, IUpdateRoomResponse} from "../../util/app.Interfaces";
 import * as _ from 'lodash';
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 
 @Component({
-    selector: 'waiting-root',
+    selector: 'waiting-room',
     templateUrl: './waiting-room.component.html',
     directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES, MD_BUTTON_DIRECTIVES]
 })
@@ -55,7 +55,7 @@ export class WaitingRoomComponent {
     }
 
     ngOnInit() {
-        this.route.params.subscribe((params: IRoomCreatedResponse) => {
+        this.route.params.subscribe((params: IPlayerJoinedRoomResponse) => {
             this.game = params.game;
 
             this.rest.getPlayer(params.player).subscribe((player: IPlayer) => {

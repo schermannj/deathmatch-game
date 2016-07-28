@@ -5,45 +5,29 @@ import {MD_TOOLBAR_DIRECTIVES} from "@angular2-material/toolbar";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router} from "@angular/router";
-import {IRoomCreatedResponse} from "../../util/app.Interfaces";
+import {IPlayerJoinedRoomResponse} from "../../util/app.Interfaces";
+import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
 
 @Component({
     selector: 'create-room',
     templateUrl: './create-room.component.html',
     directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES, MD_INPUT_DIRECTIVES]
 })
-export class CreateRoomComponent {
-    public nickname: String;
+export class CreateRoomComponent extends BaseConnectToRoomComponent {
 
-    constructor(private router: Router, private socket: SocketService) {
+    constructor(router: Router, socket: SocketService) {
+        super(router, socket);
     }
 
-    public onEnterPressed(event: KeyboardEvent) {
-        if (event.keyCode !== 13) {
-            return;
-        }
-
-        if (this.nickname.length > 0) {
-            this.doSocketActions();
-        }
-    }
-
-    private doSocketActions() {
-        if (!this.socket.hasConnection()) {
-            this.subscribe();
-        }
-
+    protected doOnEnterPressed() {
         this.socket.io().emit('createRoom', {username: this.nickname});
     }
 
-    private subscribe() {
+    protected subscribe() {
         let self: any = this;
 
-        self.socket.connect()
-            .on('serverError', (resp: any) => {
-                alert(resp.message);
-            })
-            .once('roomCreated', (resp: IRoomCreatedResponse) => {
+        self.socket.io()
+            .once('roomCreated', (resp: IPlayerJoinedRoomResponse) => {
                 self.router.navigate(['/room', resp.game, resp.player]);
             });
     }

@@ -107,7 +107,7 @@ export default class RoomEventHandler {
                 // send event to all players from this game
                 self.gameIo.sockets.in(data.game).emit('playerJoined', {
                     game: data.game,
-                    you: player
+                    you: player._id
                 });
 
             }, ExceptionHandlerService.validate)

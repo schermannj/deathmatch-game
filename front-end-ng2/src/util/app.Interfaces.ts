@@ -1,6 +1,14 @@
-export interface IRoomCreatedResponse {
+export interface IPlayerJoinedRoomResponse {
     game: String;
     player: String;
+}
+
+export interface IErrorResponse {
+    message: String;
+}
+
+export interface IJoinRoomResponse {
+    game: String;
 }
 
 export interface IPlayer {

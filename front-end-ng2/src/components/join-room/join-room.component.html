@@ -1,10 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-</body>
-</html>
+<div class="join-room-container">
+    <md-card>
+        <md-toolbar>
+            <span>
+                You're trying to join game <b>#{{game}}</b>. Enter your name and press 'Enter'.
+            </span>
+        </md-toolbar>
+        <md-card-content>
+            <md-input placeholder="Nickname" type="text" [(ngModel)]="nickname" (keyup)="onEnterPressed($event)"></md-input>
+        </md-card-content>
+    </md-card>
+</div>
+<router-outlet></router-outlet>
