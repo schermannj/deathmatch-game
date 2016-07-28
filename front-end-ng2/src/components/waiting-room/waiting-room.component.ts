@@ -8,6 +8,7 @@ import RestService from "../../services/rest.service";
 import {IPlayerJoinedRoomResponse, IPlayer, IUpdateRoomResponse} from "../../util/app.Interfaces";
 import * as _ from 'lodash';
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
+import {parse} from 'url'
 
 @Component({
     selector: 'waiting-room',
@@ -72,7 +73,10 @@ export class WaitingRoomComponent {
     }
 
     public copyLinkToJoinRoom() {
+        let url = parse(window.location.href);
+        let joinUrl = `${url.protocol}//${url.host}/join/${this.game}`;
 
+        prompt('Copy invite link to clipboard: Ctrl + C, Enter', joinUrl);
     }
 
     private refreshRoom() {

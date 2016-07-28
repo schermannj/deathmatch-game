@@ -5,7 +5,7 @@
                 Hi, {{you?.name}}. Press 'Ready' button, when you will be ready to start.
             </span>
             <span class="fill-remaining-space"></span>
-            <button md-raised-button (click)="copyLinkToJoinRoom()">INVITE</button>
+            <button md-raised-button *ngIf="you?.isAdmin" (click)="copyLinkToJoinRoom()">INVITE</button>
             <button md-raised-button (click)="doReady()" [disabled]="isPlayerReady">READY</button>
         </md-toolbar>
         <md-card-content>
