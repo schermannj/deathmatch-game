@@ -7,12 +7,13 @@ import RestService from "../../services/rest.service";
 import {HTTP_PROVIDERS} from "@angular/http";
 import {WaitingRoomComponent} from "../waiting-room/waiting-room.component";
 import {JoinRoomComponent} from "../join-room/join-room.component";
+import {GameRoomComponent} from "../game-room/game-room.component";
 
 @Component({
     selector: 'my-app',
     templateUrl: './app.component.html',
     providers: [SocketService, RestService, HTTP_PROVIDERS],
-    precompile: [CreateRoomComponent, WaitingRoomComponent, JoinRoomComponent],
+    precompile: [CreateRoomComponent, WaitingRoomComponent, JoinRoomComponent, GameRoomComponent],
     directives: [ROUTER_DIRECTIVES, CreateRoomComponent]
 })
 export class AppComponent {

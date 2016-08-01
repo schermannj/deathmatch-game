@@ -6,7 +6,7 @@ import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
 import RestService from "../../services/rest.service";
 import {
-    IPlayerJoinedRoomResponse, IPlayer, IUpdateRoomResponse, ICountdownParams,
+    IPlayerRoomResponse, IPlayer, IUpdateRoomResponse, ICountdownParams,
     IStartCountdownResponse
 } from "../../util/app.Interfaces";
 import * as _ from 'lodash';
@@ -60,10 +60,7 @@ export class WaitingRoomComponent {
                 self.countdown.time = resp.counter;
             })
             .once('startTheBattle', () => {
-                // $state.go('game', {
-                //     player: vm.you,
-                //     game: vm.game
-                // })
+                self.router.navigate(['/game', self.game, self.you._id]);
                 self.countdown.enabled = false;
             });
     }
@@ -71,7 +68,7 @@ export class WaitingRoomComponent {
     ngOnInit() {
         let self = this;
 
-        self.route.params.subscribe((params: IPlayerJoinedRoomResponse) => {
+        self.route.params.subscribe((params: IPlayerRoomResponse) => {
             self.game = params.game;
 
             self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {

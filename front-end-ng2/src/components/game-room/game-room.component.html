@@ -1,0 +1,24 @@
+<div class="game-room-container">
+    <md-card>
+        <md-card-header>
+            <md-card-title>Your score: {{totalScore}}</md-card-title>
+            <md-card-subtitle>{{you?.name}}</md-card-subtitle>
+        </md-card-header>
+        <md-progress-bar mode="determinate" color="primary" value="{{getQuestionScoreProgress()}}"></md-progress-bar>
+        <md-card-title>{{q?.text}}</md-card-title>
+        <md-card-content>
+
+            <md-radio-group *ngIf="q?.isRadio" [(ngModel)]="answer">
+                <md-radio-button *ngFor="let answer of q.possibleAnswers" [value]="answer.index">{{answer.text}}</md-radio-button>
+            </md-radio-group>
+
+            <!--TODO: implement support for checkboxes-->
+
+        </md-card-content>
+        <md-card-actions>
+            <button md-raised-button [disabled]="checkingAnswer" (click)="answerQuestion()">ANSWER</button>
+            <button md-raised-button [disabled]="checkingAnswer" (click)="skipQuestion()">SKIP</button>
+        </md-card-actions>
+    </md-card>
+</div>
+<router-outlet></router-outlet>

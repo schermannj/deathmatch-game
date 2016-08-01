@@ -1,4 +1,4 @@
-export interface IPlayerJoinedRoomResponse {
+export interface IPlayerRoomResponse {
     game: String;
     player: String;
 }
@@ -18,6 +18,29 @@ export interface IPlayer {
     name: String;
     score: Number;
     state: String;
+}
+
+export interface IPossibleAnswer {
+    index: Number;
+    text: String;
+}
+
+export interface IQuestion {
+    id: String;
+    isRadio: boolean;
+    text: String;
+    possibleAnswers: Array<IPossibleAnswer>;
+
+}
+
+export interface IScoreCountdownResponse {
+    score: Number;
+}
+
+export interface IReceiveQuestionResponse {
+    qScore: Number;
+    totalScore: Number;
+    question: IQuestion;
 }
 
 export interface IUpdateRoomResponse {

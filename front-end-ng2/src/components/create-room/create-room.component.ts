@@ -5,7 +5,7 @@ import {MD_TOOLBAR_DIRECTIVES} from "@angular2-material/toolbar";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router} from "@angular/router";
-import {IPlayerJoinedRoomResponse} from "../../util/app.Interfaces";
+import {IPlayerRoomResponse} from "../../util/app.Interfaces";
 import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
 
 @Component({
@@ -27,7 +27,7 @@ export class CreateRoomComponent extends BaseConnectToRoomComponent {
         let self: any = this;
 
         self.socket.io()
-            .once('roomCreated', (resp: IPlayerJoinedRoomResponse) => {
+            .once('roomCreated', (resp: IPlayerRoomResponse) => {
                 self.router.navigate(['/room', resp.game, resp.player]);
             });
     }

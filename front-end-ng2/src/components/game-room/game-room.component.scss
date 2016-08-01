@@ -1,0 +1,37 @@
+.game-room-container {
+  margin: 15% 0 0 25%;
+  width: 50%;
+
+  md-card {
+
+    md-progress-bar {
+      margin-bottom: 10px;
+    }
+
+    button {
+      font-weight: bolder;
+      color: #424242;
+      margin-left: 15px;
+    }
+
+    md-radio-button {
+      display: block;
+    }
+
+    md-radio-button.md-radio-checked {
+      .md-radio-inner-circle {
+        background-color: #009688;
+      }
+
+      .md-radio-outer-circle {
+        border-color: #009688;
+      }
+    }
+
+    md-radio-button.md-radio-focused {
+      .md-ink-ripple {
+        background-color: transparent;
+      }
+    }
+  }
+}
