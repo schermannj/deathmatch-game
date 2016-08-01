@@ -24,3 +24,12 @@ export interface IUpdateRoomResponse {
     game: String;
     players: Array<IPlayer>;
 }
+
+export interface ICountdownParams {
+    enabled: boolean;
+    time?: Number;
+}
+
+export interface IStartCountdownResponse {
+    counter: Number
+}

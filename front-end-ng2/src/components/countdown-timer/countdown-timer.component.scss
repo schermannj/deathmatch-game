@@ -1,0 +1,23 @@
+.countdown-timer-backdrop {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  z-index: 99999999;
+  left: 0;
+  top: 0;
+  opacity: 0.9;
+
+  .countdown-text {
+    color: #ffffff;
+    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 0;
+    height: 30%;
+    margin: auto;
+    font-size: 100px;
+  }
+}

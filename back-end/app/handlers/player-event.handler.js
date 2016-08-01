@@ -154,7 +154,7 @@ export default class PlayerEventHandler {
                 // decrement counter state
                 count--;
 
-                if (count > 0) {
+                if (count >= 0) {
                     setTimeout(countdownFunc, COUNTDOWN_DELAY);
                 } else {
                     resolve();
@@ -179,7 +179,7 @@ export default class PlayerEventHandler {
             let max = questions.length;
 
             while (randomQuestions.length < 5) {
-                let rIndex = Math.floor(Math.random() * (max + 1));
+                let rIndex = Math.floor(Math.random() * max);
                 let rQuestionId = questions[rIndex]._id;
                 let found = false;
 

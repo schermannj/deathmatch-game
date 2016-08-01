@@ -5,21 +5,32 @@ import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
 import RestService from "../../services/rest.service";
-import {IPlayerJoinedRoomResponse, IPlayer, IUpdateRoomResponse} from "../../util/app.Interfaces";
+import {
+    IPlayerJoinedRoomResponse, IPlayer, IUpdateRoomResponse, ICountdownParams,
+    IStartCountdownResponse
+} from "../../util/app.Interfaces";
 import * as _ from 'lodash';
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {parse} from 'url'
+import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
 
 @Component({
     selector: 'waiting-room',
     templateUrl: './waiting-room.component.html',
-    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES, MD_BUTTON_DIRECTIVES]
+    directives: [
+        ROUTER_DIRECTIVES,
+        MD_CARD_DIRECTIVES,
+        MD_TOOLBAR_DIRECTIVES,
+        MD_BUTTON_DIRECTIVES,
+        CountdownTimerComponent
+    ]
 })
 export class WaitingRoomComponent {
     private game: String;
     private you: IPlayer;
     private players: Array<any>;
     public isPlayerReady: boolean = false;
+    public countdown: ICountdownParams;
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -27,6 +38,9 @@ export class WaitingRoomComponent {
                 private rest: RestService) {
 
         this.players = [];
+        this.countdown = {
+            enabled: false
+        };
 
         this.subscribe();
     }
@@ -42,27 +56,28 @@ export class WaitingRoomComponent {
                     self.checkIfAllPlayersAreReady();
                 }
             })
-            .on('startCountdown', (resp: any) => {
-                // $('.container').append('<h3>Game will start in ' + resp.counter + ' !</h3>')
-                console.log(resp.counter)
+            .on('startCountdown', (resp: IStartCountdownResponse) => {
+                self.countdown.time = resp.counter;
             })
             .once('startTheBattle', () => {
                 // $state.go('game', {
                 //     player: vm.you,
                 //     game: vm.game
                 // })
-                console.log('startTheBattle');
+                self.countdown.enabled = false;
             });
     }
 
     ngOnInit() {
-        this.route.params.subscribe((params: IPlayerJoinedRoomResponse) => {
-            this.game = params.game;
+        let self = this;
 
-            this.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
-                this.you = player;
+        self.route.params.subscribe((params: IPlayerJoinedRoomResponse) => {
+            self.game = params.game;
 
-                this.refreshRoom();
+            self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
+                self.you = player;
+
+                self.refreshRoom();
             })
         });
     }
@@ -88,6 +103,8 @@ export class WaitingRoomComponent {
 
         if (allAreReady) {
             this.socket.io().emit('allPlayersAreReady', {game: this.game});
+
+            this.countdown.enabled = true;
         }
     }
 }
