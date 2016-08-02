@@ -106,7 +106,12 @@ export default class PlayerEventHandler {
      */
     playerLeaveEvent() {
         // update disconnected player and set disconnect status to 'true'
-        Player.findOneAndUpdate({socket: this.id}, {$set: {state: STATE.DISCONNECTED}}, {new: true})
+        Player
+            .findOneAndUpdate(
+                {socket: this.id, state: {$ne: STATE.FINISHED}},
+                {$set: {state: STATE.DISCONNECTED}},
+                {new: true}
+            )
             .then((disconnectedPlayer) => {
 
                 // if game doesn't exist - ignore it.
@@ -124,14 +129,14 @@ export default class PlayerEventHandler {
                     return player.state === STATE.STARTED || player.state === STATE.FINISHED;
                 });
 
-                if(didGameStart) {
+                if (didGameStart) {
                     // find finished players
                     let finishedPlayers = _.filter(players, (player) => {
                         return player.state === STATE.FINISHED;
                     });
 
                     // emit an event and update score table data for all finished players from this game
-                    for(let player of finishedPlayers) {
+                    for (let player of finishedPlayers) {
                         self.gameIo.to(player.socket).emit('doRefreshCycle');
                     }
                 } else if (players.length > 0) {
