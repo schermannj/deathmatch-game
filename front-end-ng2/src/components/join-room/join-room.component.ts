@@ -4,7 +4,7 @@ import {MD_TOOLBAR_DIRECTIVES} from "@angular2-material/toolbar";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
-import {IJoinRoomResponse, IPlayerRoomResponse} from "../../util/app.Interfaces";
+import {IGameResponse, IPlayerRoomResponse} from "../../util/app.Interfaces";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {MD_INPUT_DIRECTIVES} from "@angular2-material/input";
 import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
@@ -25,7 +25,7 @@ export class JoinRoomComponent extends BaseConnectToRoomComponent {
     }
 
     public ngOnInit() {
-        this.route.params.subscribe((params: IJoinRoomResponse) => {
+        this.route.params.subscribe((params: IGameResponse) => {
             this.game = params.game;
         });
     }

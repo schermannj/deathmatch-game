@@ -7,7 +7,7 @@ export interface IErrorResponse {
     message: String;
 }
 
-export interface IJoinRoomResponse {
+export interface IGameResponse {
     game: String;
 }
 
@@ -65,4 +65,9 @@ export interface IAnswerAcceptedResponse {
 export interface IGameOverResponse {
     score: number;
     game: String;
+}
+
+export interface IScoreTableResponse {
+    winner?: IPlayer;
+    players: Array<IPlayer>;
 }
