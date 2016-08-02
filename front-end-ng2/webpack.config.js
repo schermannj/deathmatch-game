@@ -69,7 +69,13 @@ module.exports = {
             template: path.join(__dirname, 'src/index.html')
         }),
 
-        new ExtractTextPlugin('[name].css')
+        new ExtractTextPlugin('[name].css'),
+
+        new webpack.ProvidePlugin({
+            $: "jquery",
+            jQuery: "jquery",
+            "window.jQuery": "jquery"
+        })
     ],
 
     devServer: {

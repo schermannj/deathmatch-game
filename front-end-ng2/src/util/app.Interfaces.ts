@@ -56,3 +56,13 @@ export interface ICountdownParams {
 export interface IStartCountdownResponse {
     counter: Number
 }
+
+export interface IAnswerAcceptedResponse {
+    isCorrect: boolean;
+    totalScore: number;
+}
+
+export interface IGameOverResponse {
+    score: number;
+    game: String;
+}
