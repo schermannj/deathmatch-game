@@ -1,10 +1,13 @@
 <div class="main-container">
     <md-card>
-        <md-toolbar>
-            <span>
-                Fill out this simple form or SQMD! ...and press 'Enter', genius.
-            </span>
-        </md-toolbar>
+        <md-cart-header>
+            <md-card-title>
+                FILL OUT THIS SIMPLE FORM
+            </md-card-title>
+            <md-card-subtitle>
+                ...AND  PRESS 'ENTER', GENIUS.
+            </md-card-subtitle>
+        </md-cart-header>
         <md-card-content>
             <md-input placeholder="Nickname" type="text" [(ngModel)]="nickname" (keyup)="onEnterPressed($event)"></md-input>
         </md-card-content>

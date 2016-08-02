@@ -1,7 +1,6 @@
 import {Component} from "@angular/core";
 import "./create-room.component.scss";
 import {MD_INPUT_DIRECTIVES} from "@angular2-material/input";
-import {MD_TOOLBAR_DIRECTIVES} from "@angular2-material/toolbar";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router} from "@angular/router";
@@ -11,7 +10,7 @@ import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
 @Component({
     selector: 'create-room',
     templateUrl: './create-room.component.html',
-    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES, MD_INPUT_DIRECTIVES]
+    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_INPUT_DIRECTIVES]
 })
 export class CreateRoomComponent extends BaseConnectToRoomComponent {
 
