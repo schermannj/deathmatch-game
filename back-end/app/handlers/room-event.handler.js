@@ -144,10 +144,6 @@ export default class RoomEventHandler {
     getTableScoreEvent(data) {
         let sock = this;
 
-        if (!self.ehs.validateGameExistence(data.game, sock)) {
-            return;
-        }
-
         Player.find({game: data.game})
             .then((players) => {
 
