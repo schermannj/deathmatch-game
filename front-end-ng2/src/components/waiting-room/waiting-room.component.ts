@@ -1,17 +1,19 @@
 import {Component} from "@angular/core";
 import "./waiting-room.component.scss";
-import {MD_TOOLBAR_DIRECTIVES} from "@angular2-material/toolbar";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
 import RestService from "../../services/rest.service";
 import {
-    IPlayerRoomResponse, IPlayer, IUpdateRoomResponse, ICountdownParams,
+    IPlayerRoomResponse,
+    IPlayer,
+    IUpdateRoomResponse,
+    ICountdownParams,
     IStartCountdownResponse
 } from "../../util/app.Interfaces";
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
-import {parse} from 'url'
+import {parse} from "url";
 import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
 
 @Component({
@@ -20,7 +22,6 @@ import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.compon
     directives: [
         ROUTER_DIRECTIVES,
         MD_CARD_DIRECTIVES,
-        MD_TOOLBAR_DIRECTIVES,
         MD_BUTTON_DIRECTIVES,
         CountdownTimerComponent
     ]

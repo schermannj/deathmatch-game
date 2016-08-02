@@ -1,14 +1,14 @@
 <div class="waiting-room">
     <countdown-timer [enabled]="countdown.enabled" [time]="countdown.time"></countdown-timer>
     <md-card>
-        <md-toolbar>
-            <span>
-                Hi, {{you?.name}}. Press 'Ready' button, when you will be ready to start.
-            </span>
-            <span class="fill-remaining-space"></span>
-            <button md-raised-button *ngIf="you?.isAdmin" (click)="copyLinkToJoinRoom()">INVITE</button>
-            <button md-raised-button (click)="doReady()" [disabled]="isPlayerReady">READY</button>
-        </md-toolbar>
+        <md-card-header>
+            <md-card-title>
+                {{you?.name}}
+            </md-card-title>
+            <md-card-subtitle>
+                press 'ready' when you will be ready
+            </md-card-subtitle>
+        </md-card-header>
         <md-card-content>
             <table class="table table-hover">
                 <tr>
@@ -22,6 +22,10 @@
                 </tr>
             </table>
         </md-card-content>
+        <md-card-actions>
+            <button md-raised-button (click)="doReady()" [disabled]="isPlayerReady">READY</button>
+            <button md-raised-button *ngIf="you?.isAdmin" (click)="copyLinkToJoinRoom()">INVITE</button>
+        </md-card-actions>
     </md-card>
 </div>
 <router-outlet></router-outlet>

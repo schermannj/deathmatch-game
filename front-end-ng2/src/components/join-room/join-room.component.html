@@ -1,10 +1,13 @@
 <div class="join-room-container">
     <md-card>
-        <md-toolbar>
-            <span>
-                You're trying to join game <b>#{{game}}</b>. Enter your name and press 'Enter'.
-            </span>
-        </md-toolbar>
+        <md-card-header>
+            <md-card-title>
+                GAME #{{game}}
+            </md-card-title>
+            <md-card-subtitle>
+                enter your name and press 'enter'
+            </md-card-subtitle>
+        </md-card-header>
         <md-card-content>
             <md-input placeholder="Nickname" type="text" [(ngModel)]="nickname" (keyup)="onEnterPressed($event)"></md-input>
         </md-card-content>
