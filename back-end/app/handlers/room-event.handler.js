@@ -144,6 +144,9 @@ export default class RoomEventHandler {
     getTableScoreEvent(data) {
         let sock = this;
 
+        // join this game, because everyone can come here
+        sock.join(data.game);
+
         Player.find({game: data.game})
             .then((players) => {
 

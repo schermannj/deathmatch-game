@@ -1,6 +1,5 @@
 import {Component} from "@angular/core";
 import "./join-room.component.scss";
-import {MD_TOOLBAR_DIRECTIVES} from "@angular2-material/toolbar";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
@@ -12,7 +11,7 @@ import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
 @Component({
     selector: 'join-room',
     templateUrl: './join-room.component.html',
-    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_TOOLBAR_DIRECTIVES, MD_BUTTON_DIRECTIVES, MD_INPUT_DIRECTIVES]
+    directives: [ROUTER_DIRECTIVES, MD_CARD_DIRECTIVES, MD_BUTTON_DIRECTIVES, MD_INPUT_DIRECTIVES]
 })
 export class JoinRoomComponent extends BaseConnectToRoomComponent {
     public game: String;

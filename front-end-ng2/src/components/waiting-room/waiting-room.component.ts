@@ -58,6 +58,9 @@ export class WaitingRoomComponent {
                 }
             })
             .on('startCountdown', (resp: IStartCountdownResponse) => {
+                if (!this.countdown.enabled) {
+                    this.countdown.enabled = true;
+                }
                 self.countdown.time = resp.counter;
             })
             .once('startTheBattle', () => {
@@ -101,8 +104,6 @@ export class WaitingRoomComponent {
 
         if (allAreReady) {
             this.socket.io().emit('allPlayersAreReady', {game: this.game});
-
-            this.countdown.enabled = true;
         }
     }
 }
