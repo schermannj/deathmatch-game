@@ -156,10 +156,10 @@ export default class PlayerEventHandler {
                 }
             }, ExceptionHandlerService.validate)
             .then((admin) => {
-                ExceptionHandlerService.assertNotNull(admin);
-
                 // emit event to new admin and give him access rights
-                self.gameIo.to(admin.socket).emit('grantAdminRights');
+                if (admin) {
+                    self.gameIo.to(admin.socket).emit('grantAdminRights');
+                }
             })
             .catch((err) => {
                 self.log.debug(err.message);
