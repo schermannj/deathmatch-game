@@ -1,7 +1,6 @@
 import {Component} from "@angular/core";
 import "./app.component.scss";
 import {CreateRoomComponent} from "../create-room/create-room.component";
-import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES} from "@angular/router";
 import RestService from "../../services/rest.service";
 import {HTTP_PROVIDERS} from "@angular/http";
@@ -14,7 +13,7 @@ import {NotFoundComponent} from "../not-found/not-found.component";
 @Component({
     selector: 'my-app',
     templateUrl: './app.component.html',
-    providers: [SocketService, RestService, HTTP_PROVIDERS],
+    providers: [RestService, HTTP_PROVIDERS],
     precompile: [
         CreateRoomComponent,
         WaitingRoomComponent,
@@ -23,7 +22,7 @@ import {NotFoundComponent} from "../not-found/not-found.component";
         ScoreTableRoomComponent,
         NotFoundComponent
     ],
-    directives: [ROUTER_DIRECTIVES, CreateRoomComponent]
+    directives: [ROUTER_DIRECTIVES]
 })
 export class AppComponent {
 
