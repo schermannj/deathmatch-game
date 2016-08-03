@@ -4,8 +4,9 @@ import {MD_INPUT_DIRECTIVES} from "@angular2-material/input";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
 import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router} from "@angular/router";
-import {IPlayerRoomResponse} from "../../util/app.Interfaces";
+import {IPlayerRoomResponse, ISessionStorageState} from "../../util/app.Interfaces";
 import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
+import {SessionStorage} from "angular2-localstorage/WebStorage";
 
 @Component({
     selector: 'create-room',
@@ -14,8 +15,13 @@ import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
 })
 export class CreateRoomComponent extends BaseConnectToRoomComponent {
 
+    @SessionStorage()
+    public state: ISessionStorageState = {};
+
     constructor(router: Router, socket: SocketService) {
         super(router, socket);
+
+        this.state = {};
     }
 
     protected doOnEnterPressed() {

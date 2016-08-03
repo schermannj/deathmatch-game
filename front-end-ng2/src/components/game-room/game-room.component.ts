@@ -8,7 +8,7 @@ import {
     IPlayerRoomResponse,
     IPlayer,
     IReceiveQuestionResponse,
-    IScoreCountdownResponse, IQuestion, IAnswerAcceptedResponse, IGameOverResponse
+    IScoreCountdownResponse, IQuestion, IAnswerAcceptedResponse, IGameOverResponse, ISessionStorageState
 } from "../../util/app.Interfaces";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import RestService from "../../services/rest.service";
@@ -17,6 +17,7 @@ import {MD_RADIO_DIRECTIVES} from "@angular2-material/radio";
 import {MdUniqueSelectionDispatcher} from "@angular2-material/core";
 import {AcceptAnswerModalComponent} from "./accept-answer/accept-answer.modal.component";
 import {GameOverModalComponent} from "./game-over/game-over.modal.component";
+import {SessionStorage} from "angular2-localstorage/WebStorage";
 
 @Component({
     selector: 'game-room',
@@ -51,6 +52,9 @@ export class GameRoomComponent implements OnInit {
 
     @ViewChild('gameOverModal')
     private gameOverModal: GameOverModalComponent;
+
+    @SessionStorage()
+    public state: ISessionStorageState = {};
 
     constructor(private route: ActivatedRoute,
                 private router: Router,

@@ -77,5 +77,5 @@ export interface ISessionStorageState {
     player?: {
         id: String;
     };
-    page: String;
+    status?:String;
 }

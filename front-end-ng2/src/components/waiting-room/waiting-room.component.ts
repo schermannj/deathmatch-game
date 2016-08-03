@@ -17,7 +17,7 @@ import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {parse} from "url";
 import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
 import {SessionStorage} from "angular2-localstorage/WebStorage";
-import {PAGE_WITH_STATE} from "../../util/config.util";
+import {STATE_STATUS} from "../../util/config.util";
 
 @Component({
     selector: 'waiting-room',
@@ -37,7 +37,7 @@ export class WaitingRoomComponent {
     public countdown: ICountdownParams;
 
     @SessionStorage()
-    public state: ISessionStorageState = {page: PAGE_WITH_STATE.WAITING};
+    public state: ISessionStorageState = {};
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -73,11 +73,14 @@ export class WaitingRoomComponent {
             .once('startTheBattle', () => {
                 self.router.navigate(['/game', self.game, self.you._id]);
                 self.countdown.enabled = false;
+                self.state.status = STATE_STATUS.STARTED;
             });
     }
 
     ngOnInit() {
         let self = this;
+
+        self.state.status = self.state.status ? self.state.status : STATE_STATUS.WAITING;
 
         self.route.params.subscribe((params: IPlayerRoomResponse) => {
             self.game = params.game;
@@ -123,6 +126,10 @@ export class WaitingRoomComponent {
             this.state.game = this.game;
             this.state.player = {id: this.you._id};
         }
+
+        if(this.state.status !== STATE_STATUS.WAITING) {
+            this.open404();
+        }
     }
 
     private tryToReconnect() {
@@ -136,7 +143,12 @@ export class WaitingRoomComponent {
                     self.you = resp;
                 });
         } else {
-            this.router.navigate(['/404']);
+            this.open404();
         }
+    }
+
+    private open404() {
+        this.socket.io().removeAllListeners();
+        this.router.navigate(['/404']);
     }
 }
