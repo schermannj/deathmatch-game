@@ -140,10 +140,27 @@ export default class PlayerEventHandler {
                         self.gameIo.to(player.socket).emit('doRefreshCycle');
                     }
                 } else if (players.length > 0) {
-                    // if there are some players and game didn't start, send them an event and update room
-                    self.gameIo.sockets.in(players[0].game).emit('updateRoom', {players: players});
+                    let game = players[0].game;
+
+                    // if admin leave the game then find new player and give him admin rights
+                    let isThereAdmin = _.some(players, ['isAdmin', true]);
+
+                    if (!isThereAdmin) {
+                        return Player.findOneAndUpdate(
+                            {game: game, state: {$ne: STATE.DISCONNECTED}}, {$set: {isAdmin: true}}
+                        );
+                    } else {
+                        // if there are some players and game didn't start, send them an event and update room
+                        self.gameIo.sockets.in(game).emit('updateRoom', {players: players});
+                    }
                 }
             }, ExceptionHandlerService.validate)
+            .then((admin) => {
+                ExceptionHandlerService.assertNotNull(admin);
+
+                // emit event to new admin and give him access rights
+                self.gameIo.to(admin.socket).emit('grantAdminRights');
+            })
             .catch((err) => {
                 self.log.debug(err.message);
             });

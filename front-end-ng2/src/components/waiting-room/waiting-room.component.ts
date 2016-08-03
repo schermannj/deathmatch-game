@@ -57,6 +57,9 @@ export class WaitingRoomComponent {
                     self.checkIfAllPlayersAreReady();
                 }
             })
+            .on('grantAdminRights', () => {
+                self.you.isAdmin = true;
+            })
             .on('startCountdown', (resp: IStartCountdownResponse) => {
                 if (!this.countdown.enabled) {
                     this.countdown.enabled = true;
