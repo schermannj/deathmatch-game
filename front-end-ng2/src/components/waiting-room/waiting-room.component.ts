@@ -9,12 +9,15 @@ import {
     IPlayer,
     IUpdateRoomResponse,
     ICountdownParams,
-    IStartCountdownResponse
+    IStartCountdownResponse,
+    ISessionStorageState
 } from "../../util/app.Interfaces";
 import * as _ from "lodash";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {parse} from "url";
 import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
+import {SessionStorage} from "angular2-localstorage/WebStorage";
+import {PAGE_WITH_STATE} from "../../util/config.util";
 
 @Component({
     selector: 'waiting-room',
@@ -33,6 +36,9 @@ export class WaitingRoomComponent {
     public isPlayerReady: boolean = false;
     public countdown: ICountdownParams;
 
+    @SessionStorage()
+    public state: ISessionStorageState = {page: PAGE_WITH_STATE.WAITING};
+
     constructor(private route: ActivatedRoute,
                 private router: Router,
                 private socket: SocketService,
@@ -42,8 +48,6 @@ export class WaitingRoomComponent {
         this.countdown = {
             enabled: false
         };
-
-        this.subscribe();
     }
 
     private subscribe() {
@@ -81,6 +85,8 @@ export class WaitingRoomComponent {
             self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
                 self.you = player;
 
+                self.checkConnection();
+                self.subscribe();
                 self.refreshRoom();
             })
         });
@@ -107,6 +113,30 @@ export class WaitingRoomComponent {
 
         if (allAreReady) {
             this.socket.io().emit('allPlayersAreReady', {game: this.game});
+        }
+    }
+
+    private checkConnection() {
+        if (!this.socket.hasConnection()) {
+            this.tryToReconnect();
+        } else {
+            this.state.game = this.game;
+            this.state.player = {id: this.you._id};
+        }
+    }
+
+    private tryToReconnect() {
+        let self = this;
+        
+        if (self.state.game === self.game && self.state.player.id === self.you._id) {
+            self.socket
+                .connect()
+                .emit('reconnectPlayer', self.state)
+                .once('playerReconnected', (resp: IPlayer) => {
+                    self.you = resp;
+                });
+        } else {
+            this.router.navigate(['/404']);
         }
     }
 }

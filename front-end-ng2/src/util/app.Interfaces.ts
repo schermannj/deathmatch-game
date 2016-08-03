@@ -71,3 +71,11 @@ export interface IScoreTableResponse {
     winner?: IPlayer;
     players: Array<IPlayer>;
 }
+
+export interface ISessionStorageState {
+    game?: String;
+    player?: {
+        id: String;
+    };
+    page: String;
+}

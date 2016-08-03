@@ -11,7 +11,8 @@ import {SocketConnectionGuard} from "./socket-connection-guard.service";
 export const routes: RouterConfig = [
     {path: '', component: CreateRoomComponent},
     {path: 'join/:game', component: JoinRoomComponent},
-    {path: 'room/:game/:player', component: WaitingRoomComponent, canActivate: [SocketConnectionGuard]},
+    // {path: 'room/:game/:player', component: WaitingRoomComponent, canActivate: [SocketConnectionGuard]},
+    {path: 'room/:game/:player', component: WaitingRoomComponent},
     {path: 'game/:game/:player', component: GameRoomComponent, canActivate: [SocketConnectionGuard]},
     {path: 'scores/:game', component: ScoreTableRoomComponent},
     {path: '404', component: NotFoundComponent},

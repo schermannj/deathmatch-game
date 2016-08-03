@@ -19,6 +19,7 @@ export default class PlayerEventHandler {
         gameSocket.on('disconnect', this.playerLeaveEvent);
         gameSocket.on('playerIsReady', this.playerIsReadyEvent);
         gameSocket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
+        gameSocket.on('reconnectPlayer', this.reconnectPlayer);
     }
 
     /**
@@ -164,6 +165,39 @@ export default class PlayerEventHandler {
             .catch((err) => {
                 self.log.debug(err.message);
             });
+    }
+
+    /**
+     * @this is a socket obj;
+     */
+    reconnectPlayer(data) {
+        let sock = this;
+
+        // find all connected players from this game
+        Player
+            .find({game: data.game, state: {$ne: STATE.DISCONNECTED}})
+            .then((players) => {
+
+                let setObj = {socket: sock.id, state: STATE.CONNECTED};
+
+                // take away admin access rights if there are more players
+                if (players.length >= 1) {
+                    setObj.isAdmin = false;
+                }
+
+                // update disconnected player and set to him status CONNECTED, new sock id
+                return Player.findOneAndUpdate({_id: data.player.id, game: data.game}, {$set: setObj}, {new: true});
+            })
+            .then((player) => {
+                // if player updated successfully -> join the game
+                sock.join(player.game);
+
+                // notify FE that player successfully joined the game
+                sock.emit('playerReconnected', player);
+            }, ExceptionHandlerService.validate)
+            .catch((err) => {
+                self.log.debug(err.message);
+            })
     }
 
     startCountdown(game) {
