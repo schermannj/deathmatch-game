@@ -87,6 +87,8 @@ export default class PlayerEventHandler {
 
             }, ExceptionHandlerService.validate)
             .then((game) => {
+                // notify FE about game event
+                self.gameIo.sockets.in(data.game).emit('prepareGameRoom');
 
                 // start countdown
                 return self.startCountdown(game);

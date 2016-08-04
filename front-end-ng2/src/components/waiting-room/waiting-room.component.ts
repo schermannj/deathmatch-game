@@ -90,10 +90,11 @@ export class WaitingRoomComponent {
             .on('grantAdminRights', () => {
                 self.you.isAdmin = true;
             })
+            .once('prepareGameRoom', () => {
+                this.countdown.enabled = true;
+                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTED);
+            })
             .on('startCountdown', (resp: IStartCountdownResponse) => {
-                if (!this.countdown.enabled) {
-                    this.countdown.enabled = true;
-                }
                 self.countdown.time = resp.counter;
             })
             .once('startTheBattle', () => {
@@ -111,7 +112,6 @@ export class WaitingRoomComponent {
 
         if (allAreReady) {
             this.socket.io().emit('allPlayersAreReady', {game: this.game});
-            localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTED);
         }
     }
 }

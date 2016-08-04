@@ -8,7 +8,10 @@ import {
     IPlayerRoomResponse,
     IPlayer,
     IReceiveQuestionResponse,
-    IScoreCountdownResponse, IQuestion, IAnswerAcceptedResponse, IGameOverResponse
+    IScoreCountdownResponse,
+    IQuestion,
+    IAnswerAcceptedResponse,
+    IGameOverResponse
 } from "../../util/app.Interfaces";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import RestService from "../../services/rest.service";
@@ -17,6 +20,7 @@ import {MD_RADIO_DIRECTIVES} from "@angular2-material/radio";
 import {MdUniqueSelectionDispatcher} from "@angular2-material/core";
 import {AcceptAnswerModalComponent} from "./accept-answer/accept-answer.modal.component";
 import {GameOverModalComponent} from "./game-over/game-over.modal.component";
+import {STORAGE_KEYS, STATE_STATUS} from "../../util/config.util";
 
 @Component({
     selector: 'game-room',
@@ -131,6 +135,7 @@ export class GameRoomComponent implements OnInit {
                 self.acceptAnswerModal.open(resp);
             })
             .once('gameOver', (resp: IGameOverResponse) => {
+                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.FINISHED);
                 self.gameOverModal.open(resp);
             })
             .on('receiveQuestion', (resp: IReceiveQuestionResponse) => {

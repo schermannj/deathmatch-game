@@ -1,6 +1,7 @@
 import {CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router} from "@angular/router";
 import {Injectable} from "@angular/core";
-import {Observable, Subscriber} from "rxjs";
+import {Observable} from "rxjs/Observable";
+import {Subscriber} from "rxjs/Subscriber";
 import {STORAGE_KEYS, STATE_STATUS} from "../../util/config.util";
 import {SocketService} from "../../services/socket.service";
 
