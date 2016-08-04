@@ -1,9 +1,8 @@
 import * as _ from "lodash";
-import Game from "../models/Game";
 import Question from "../models/Question";
 import Player from "../models/Player";
 import ExceptionHandlerService from "../services/exception-handler.service";
-import {STATE, SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY} from "../config/constants";
+import {STATE, SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY, PLAYER_START_SCORE} from "../config/constants";
 import * as log4js from "log4js";
 
 let self;
@@ -74,7 +73,7 @@ export default class QuestionEventHandler {
     }
 
     /**
-     * @this is a socket obj; TODO: rewrite it
+     * @this is a socket obj;
      */
     answerQuestionEvent(data) {
         let sock = this;
@@ -83,47 +82,26 @@ export default class QuestionEventHandler {
             return;
         }
 
-        // if (player.questions.length === 0) {
-        //     throw new Error('Something went wrong, no more question exists')
-        // }
-
-        // get next question
-        // let currentQuestionId = player.questions.shift();
-        //
-        // Player.findOneAndUpdate(
-        //     {_id: player._id, game: player.game},
-        //     {
-        //         $set: {
-        //             questions: player.questions,
-        //             lastQuestionState: {id: currentQuestionId, score: PLAYER_START_SCORE}
-        //         }
-        //     },
-        //     {new: true}
-        // )
-
         // set up player state to 'false' (it means that player is waiting for result and new question)
         self.psh.setInAction(sock.id, false);
 
         let isCorrect = false;
         let hasMoreQuestions = true;
 
-        Promise.all([Game.findOne({_id: data.game}), Question.findOne({_id: data.question._id})])
-            .then((resolveArray) => {
-
-                // check resolve array (length has to be 2 - game and question)
-                if (resolveArray.length != 2) {
-                    self.log.debug(`Invalid resolve array length - ${resolveArray.length}`);
-
-                    sock.emit('serverError', {message: `Something went wrong - invalid resolve array length.`});
-
-                    return;
+        Promise
+            .all([
+                Player.findOne({_id: data.player, game: data.game}),
+                Question.findOne({_id: data.question._id})
+            ])
+            .then((resp) => {
+                // check resolve array (length has to be 2 - player and question)
+                if (resp.length != 2) {
+                    throw new Error(`Invalid resolve array length - ${resp.length}`);
                 }
 
-                // define game and question variables
-                let game = resolveArray[0];
-                let question = resolveArray[1];
-
-                ExceptionHandlerService.assertNotNull(game);
+                // define player and question variables
+                let player = resp[0];
+                let question = resp[1];
 
                 // get player score for this question
                 let pScore = self.psh.getScore(sock.id);
@@ -139,11 +117,22 @@ export default class QuestionEventHandler {
                 }
 
                 // check if it isn't the last question
-                hasMoreQuestions = data.question.index != game.questions.length;
+                hasMoreQuestions = player.questions.length > 0;
                 let updateDocument = {$inc: {score: pScore}};
 
-                // if there isn't more questions player finish state will be set to 'true'
-                if (!hasMoreQuestions) {
+                // if there are more questions, currentQuestion field will be updated
+                // else player's finish state will be set to 'true'
+                if (hasMoreQuestions) {
+                    let nextQuestion = player.questions.shift();
+
+                    updateDocument['$set'] = {
+                        currentQuestion: {
+                            id: nextQuestion,
+                            score: PLAYER_START_SCORE
+                        },
+                        questions: player.questions
+                    };
+                } else {
                     updateDocument['$set'] = {state: STATE.FINISHED};
                 }
 

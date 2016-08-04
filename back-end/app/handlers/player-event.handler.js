@@ -81,6 +81,7 @@ export default class PlayerEventHandler {
             }, ExceptionHandlerService.validate)
             .then((questions) => {
                 let gameQuestions = self.get5RandomQuestionsIds(questions);
+                let firstQuestion = gameQuestions.shift();
 
                 // save 5 random selected questions to all players' objects and set first question to each player
                 return Player.update(
@@ -89,7 +90,7 @@ export default class PlayerEventHandler {
                         $set: {
                             questions: gameQuestions,
                             currentQuestion: {
-                                id: gameQuestions[0],
+                                id: firstQuestion,
                                 score: PLAYER_START_SCORE
                             }
                         }
