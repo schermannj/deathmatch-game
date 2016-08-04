@@ -45,6 +45,37 @@ export class WaitingRoomComponent {
         };
     }
 
+    public doReady() {
+        this.isPlayerReady = true;
+        this.socket.io().emit('playerIsReady', {game: this.game, player: this.you});
+    }
+
+    public copyLinkToJoinRoom() {
+        let url = parse(window.location.href);
+        let joinUrl = `${url.protocol}//${url.host}/join/${this.game}`;
+
+        prompt('Copy invite link to clipboard: Ctrl + C, Enter', joinUrl);
+    }
+
+    ngOnInit() {
+        let self = this;
+
+        self.route.params.subscribe((params: IPlayerRoomResponse) => {
+            self.game = params.game;
+
+            self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
+                self.you = player;
+
+                localStorage.setItem(STORAGE_KEYS.GAME, this.game);
+                localStorage.setItem(STORAGE_KEYS.PLAYER, this.you._id);
+                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.WAITING);
+
+                self.subscribe();
+                self.refreshRoom();
+            })
+        });
+    }
+
     private subscribe() {
         let self: any = this;
 
@@ -69,37 +100,6 @@ export class WaitingRoomComponent {
                 self.router.navigate(['/game', self.game, self.you._id]);
                 self.countdown.enabled = false;
             });
-    }
-
-    ngOnInit() {
-        let self = this;
-
-        self.route.params.subscribe((params: IPlayerRoomResponse) => {
-            self.game = params.game;
-
-            self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
-                self.you = player;
-
-                localStorage.setItem(STORAGE_KEYS.GAME, this.game);
-                localStorage.setItem(STORAGE_KEYS.PLAYER, this.you._id);
-                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.WAITING);
-
-                self.subscribe();
-                self.refreshRoom();
-            })
-        });
-    }
-
-    public doReady() {
-        this.isPlayerReady = true;
-        this.socket.io().emit('playerIsReady', {game: this.game, player: this.you});
-    }
-
-    public copyLinkToJoinRoom() {
-        let url = parse(window.location.href);
-        let joinUrl = `${url.protocol}//${url.host}/join/${this.game}`;
-
-        prompt('Copy invite link to clipboard: Ctrl + C, Enter', joinUrl);
     }
 
     private refreshRoom() {
