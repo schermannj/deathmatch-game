@@ -126,10 +126,7 @@ export default class QuestionEventHandler {
                     let nextQuestion = player.questions.shift();
 
                     updateDocument['$set'] = {
-                        currentQuestion: {
-                            id: nextQuestion,
-                            score: PLAYER_START_SCORE
-                        },
+                        currentQuestion: {id: nextQuestion, score: PLAYER_START_SCORE},
                         questions: player.questions
                     };
                 } else {
