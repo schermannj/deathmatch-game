@@ -12,9 +12,6 @@ const GameSchema = new Schema({
             return uuid.v1({nsecs: ID_MIXIN});
         }
     },
-    questions: {
-        type: [String]
-    },
     level: {
         type: Number
     },

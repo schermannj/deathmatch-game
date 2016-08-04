@@ -5,16 +5,18 @@ import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
 import {STATE, COUNTDOWN_COUNT, COUNTDOWN_DELAY} from "../config/constants";
 import * as log4js from 'log4js';
+import {PLAYER_START_SCORE} from "../config/constants";
 
 let self;
 export default class PlayerEventHandler {
 
-    constructor(gameIo, gameSocket, ehs) {
+    constructor(gameIo, gameSocket, ehs, psh) {
         self = this;
 
         self.log = log4js.getLogger();
         self.gameIo = gameIo;
         self.ehs = ehs;
+        self.psh = psh;
 
         gameSocket.on('disconnect', this.playerLeaveEvent);
         gameSocket.on('playerIsReady', this.playerIsReadyEvent);
@@ -78,20 +80,29 @@ export default class PlayerEventHandler {
 
             }, ExceptionHandlerService.validate)
             .then((questions) => {
+                let gameQuestions = self.get5RandomQuestionsIds(questions);
 
-                // save 5 random selected questions to the game object
-                return Game.findOneAndUpdate(
-                    {_id: data.game},
-                    {$set: {questions: self.get5RandomQuestionsIds(questions)}}
-                );
+                // save 5 random selected questions to all players' objects and set first question to each player
+                return Player.update(
+                    {game: data.game},
+                    {
+                        $set: {
+                            questions: gameQuestions,
+                            currentQuestion: {
+                                id: gameQuestions[0],
+                                score: PLAYER_START_SCORE
+                            }
+                        }
+                    },
+                    {multi: true});
 
             }, ExceptionHandlerService.validate)
-            .then((game) => {
+            .then(() => {
                 // notify FE about game event
                 self.gameIo.sockets.in(data.game).emit('prepareGameRoom');
 
                 // start countdown
-                return self.startCountdown(game);
+                return self.startCountdown(data.game);
 
             }, ExceptionHandlerService.validate)
             .then(() => {
@@ -108,19 +119,32 @@ export default class PlayerEventHandler {
      * @this is a socket obj;
      */
     playerLeaveEvent() {
+
+        // stop score countdown if it's possible
+        self.psh.setInAction(this.id, false);
+
+        // try to get player question score
+        let score = self.psh.getScore(this.id);
+
+        // set player's score to question state and update player
+        let setObj = {state: STATE.DISCONNECTED};
+        if(score) {
+            setObj['currentQuestion.score'] = score;
+        }
+
         // update disconnected player and set disconnect status to 'true'
         Player
             .findOneAndUpdate(
                 {socket: this.id, state: {$ne: STATE.FINISHED}},
-                {$set: {state: STATE.DISCONNECTED}},
+                {$set: setObj},
                 {new: true}
             )
             .then((disconnectedPlayer) => {
 
                 // if game doesn't exist - ignore it.
-                if (!self.ehs.doesGameExist(disconnectedPlayer.game)) {
-                    return;
-                }
+                // if (!self.ehs.doesGameExist(disconnectedPlayer.game)) {
+                //     throw new Error('Game doesn\'t exist!')
+                // }
 
                 // find all players who didn't leave the game
                 return Player.find({game: disconnectedPlayer.game, state: {$ne: STATE.DISCONNECTED}});
@@ -142,7 +166,7 @@ export default class PlayerEventHandler {
                     for (let player of finishedPlayers) {
                         self.gameIo.to(player.socket).emit('doRefreshCycle');
                     }
-                } else if (players.length > 0) {
+                } else if (players && players.length > 0) {
                     let game = players[0].game;
 
                     // if admin leave the game then find new player and give him admin rights
@@ -180,7 +204,7 @@ export default class PlayerEventHandler {
             .find({game: data.game, state: {$ne: STATE.DISCONNECTED}})
             .then((players) => {
 
-                let setObj = {socket: sock.id, state: STATE.CONNECTED};
+                let setObj = {socket: sock.id, state: data.state};
 
                 // take away admin access rights if there are more players
                 if (players.length >= 1) {
@@ -207,7 +231,7 @@ export default class PlayerEventHandler {
             let count = COUNTDOWN_COUNT;
 
             let countdownFunc = () => {
-                self.gameIo.sockets.in(game._id).emit('startCountdown', {counter: count});
+                self.gameIo.sockets.in(game).emit('startCountdown', {counter: count});
 
                 // decrement counter state
                 count--;

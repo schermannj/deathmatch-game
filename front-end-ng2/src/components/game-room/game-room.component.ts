@@ -20,7 +20,7 @@ import {MD_RADIO_DIRECTIVES} from "@angular2-material/radio";
 import {MdUniqueSelectionDispatcher} from "@angular2-material/core";
 import {AcceptAnswerModalComponent} from "./accept-answer/accept-answer.modal.component";
 import {GameOverModalComponent} from "./game-over/game-over.modal.component";
-import {STORAGE_KEYS, STATE_STATUS} from "../../util/config.util";
+import {STORAGE_KEYS, STATE_STATUS, PLAYER_START_SCORE} from "../../util/config.util";
 
 @Component({
     selector: 'game-room',
@@ -46,9 +46,7 @@ export class GameRoomComponent implements OnInit {
 
     // TODO: move it to questions state or something..
     public playerGameScore: number = 0;
-    private maxQuestionScore: number;
     public currentQuestionScore: number;
-    private questionIndex: number = 0;
 
     @ViewChild('acceptAnswerModal')
     private acceptAnswerModal: AcceptAnswerModalComponent;
@@ -72,9 +70,9 @@ export class GameRoomComponent implements OnInit {
     }
 
     public getQuestionScoreProgress(): Number {
-        let progressValue = (this.currentQuestionScore * 100) / this.maxQuestionScore;
+        let progressValue = (this.currentQuestionScore * 100) / PLAYER_START_SCORE;
 
-        return isNaN(progressValue) ? 100 : progressValue;
+        return isNaN(progressValue) ? 0 : progressValue;
     }
 
     public getQuestion() {
@@ -82,8 +80,7 @@ export class GameRoomComponent implements OnInit {
             .io()
             .emit('getQuestion', {
                 game: this.game,
-                player: this.player,
-                qIndex: this.questionIndex
+                player: this.player
             });
     }
 
@@ -121,7 +118,6 @@ export class GameRoomComponent implements OnInit {
             question: {
                 _id: this.question.id,
                 answer: answer,
-                index: this.questionIndex
             }
         });
     }
@@ -140,10 +136,8 @@ export class GameRoomComponent implements OnInit {
             })
             .on('receiveQuestion', (resp: IReceiveQuestionResponse) => {
                 self.question = resp.question;
-                self.maxQuestionScore = self.currentQuestionScore = resp.qScore;
                 self.currentQuestionScore = resp.qScore;
                 self.playerGameScore = resp.totalScore;
-                self.questionIndex++;
             })
             .on('scoreCountdown', (resp: IScoreCountdownResponse) => {
                 self.currentQuestionScore = resp.score;

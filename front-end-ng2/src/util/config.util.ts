@@ -1,5 +1,6 @@
 export const SERVER_URL = 'http://localhost:3000';
 export const WS_SERVER_URL = 'http://localhost:3001/';
+export const PLAYER_START_SCORE = 60000;
 export const STATE_STATUS = {
     WAITING: 'WAITING_FOR_PLAYERS',
     STARTED: 'GAME_STARTED',
@@ -10,4 +11,11 @@ export const STORAGE_KEYS = {
     PLAYER: 'PLAYER_ID',
     STATE: 'STATE_STATUS',
     CAN_DEACTIVATE_GAME_ROOM: 'CAN_DEACTIVATE_GAME_ROOM'
+};
+export const PLAYER_STATE = {
+    CONNECTED: 'CONNECTED',
+    READY: 'READY',
+    STARTED: 'STARTED',
+    FINISHED: 'FINISHED',
+    DISCONNECTED: 'DISCONNECTED'
 };

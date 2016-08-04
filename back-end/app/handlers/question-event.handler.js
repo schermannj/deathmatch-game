@@ -1,22 +1,21 @@
-import * as _ from 'lodash';
-import Game from '../models/Game';
-import Question from '../models/Question';
-import Player from '../models/Player';
-import ExceptionHandlerService from '../services/exception-handler.service';
-import {STATE, PLAYER_START_SCORE, SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY} from "../config/constants";
-import * as log4js from 'log4js';
-
-const pSocketsScoreMap = {};
+import * as _ from "lodash";
+import Game from "../models/Game";
+import Question from "../models/Question";
+import Player from "../models/Player";
+import ExceptionHandlerService from "../services/exception-handler.service";
+import {STATE, SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY} from "../config/constants";
+import * as log4js from "log4js";
 
 let self;
 export default class QuestionEventHandler {
 
-    constructor(gameIo, gameSocket, ehs) {
+    constructor(gameIo, gameSocket, ehs, psh) {
         self = this;
 
         self.log = log4js.getLogger();
         self.gameIo = gameIo;
         self.ehs = ehs;
+        self.psh = psh;
 
         gameSocket.on('getQuestion', this.getQuestionEvent);
         gameSocket.on('answer', this.answerQuestionEvent);
@@ -32,41 +31,23 @@ export default class QuestionEventHandler {
             return;
         }
 
-        // find game object
-        Game.findOne({_id: data.game})
-            .then((game) => {
-                ExceptionHandlerService.assertNotNull(game);
-
-                // check if question index < game questions count
-                if (data.qIndex >= game.questions.length) {
-                    self.log.debug(`Invalid question index - ${data.qIndex}`);
-
-                    sock.emit('serverError', {message: `Something went wrong - invalid question index. Seems 
-                                                    like you're going to lose this game...`});
-                    return;
-                }
-
-                // get next question and player
-                return Promise.all([
-                    Question.findOne({_id: game.questions[data.qIndex]}),
-                    Player.findOne({_id: data.player._id})
-                ]);
+        // find player object to next question id
+        Player
+            .findOne({_id: data.player, game: data.game})
+            .then((player) => {
+                // find next question and send player to next promise chain
+                return Promise.all([Question.findOne({_id: player.currentQuestion.id}), Promise.resolve(player)]);
 
             }, ExceptionHandlerService.validate)
-            .then((resolveArray) => {
-
+            .then((resp) => {
                 // check resolve array (length has to be 2 - question and player)
-                if(resolveArray.length != 2) {
-                    self.log.debug(`Invalid resolve array length - ${resolveArray.length}`);
-
-                    sock.emit('serverError', {message: `Something went wrong - invalid resolve array length.`});
-
-                    return;
+                if (resp.length != 2) {
+                    throw new Error(`Invalid resolve array length - ${resp.length}`);
                 }
 
                 // get player and question from the response
-                let question = resolveArray[0];
-                let player = resolveArray[1];
+                let question = resp[0];
+                let player = resp[1];
 
                 // emit question object and player scores to the player
                 sock.emit('receiveQuestion', {
@@ -76,15 +57,15 @@ export default class QuestionEventHandler {
                         possibleAnswers: question.possibleAnswers,
                         isRadio: question.isRadio
                     },
-                    qScore: PLAYER_START_SCORE,
+                    qScore: player.currentQuestion.score,
                     totalScore: player.score
                 });
 
                 // store player score to the map
-                self.putScoreToMap(player.socket, PLAYER_START_SCORE);
+                self.psh.put(player.socket, player.currentQuestion.score);
 
                 // start new countdown for the new question
-                self.startScoreCountdown(sock, PLAYER_START_SCORE);
+                self.startScoreCountdown(sock, player._id);
 
             }, ExceptionHandlerService.validate)
             .catch((err) => {
@@ -93,7 +74,7 @@ export default class QuestionEventHandler {
     }
 
     /**
-     * @this is a socket obj;
+     * @this is a socket obj; TODO: rewrite it
      */
     answerQuestionEvent(data) {
         let sock = this;
@@ -102,8 +83,26 @@ export default class QuestionEventHandler {
             return;
         }
 
+        // if (player.questions.length === 0) {
+        //     throw new Error('Something went wrong, no more question exists')
+        // }
+
+        // get next question
+        // let currentQuestionId = player.questions.shift();
+        //
+        // Player.findOneAndUpdate(
+        //     {_id: player._id, game: player.game},
+        //     {
+        //         $set: {
+        //             questions: player.questions,
+        //             lastQuestionState: {id: currentQuestionId, score: PLAYER_START_SCORE}
+        //         }
+        //     },
+        //     {new: true}
+        // )
+
         // set up player state to 'false' (it means that player is waiting for result and new question)
-        pSocketsScoreMap[sock.id].inAction = false;
+        self.psh.setInAction(sock.id, false);
 
         let isCorrect = false;
         let hasMoreQuestions = true;
@@ -112,7 +111,7 @@ export default class QuestionEventHandler {
             .then((resolveArray) => {
 
                 // check resolve array (length has to be 2 - game and question)
-                if(resolveArray.length != 2) {
+                if (resolveArray.length != 2) {
                     self.log.debug(`Invalid resolve array length - ${resolveArray.length}`);
 
                     sock.emit('serverError', {message: `Something went wrong - invalid resolve array length.`});
@@ -127,7 +126,7 @@ export default class QuestionEventHandler {
                 ExceptionHandlerService.assertNotNull(game);
 
                 // get player score for this question
-                let pScore = pSocketsScoreMap[sock.id].score;
+                let pScore = self.psh.getScore(sock.id);
 
                 // check if right answers contain player answer
                 let answersIntersection = _.intersection(question.rightAnswers, data.question.answer);
@@ -154,7 +153,7 @@ export default class QuestionEventHandler {
             }, ExceptionHandlerService.validate)
             .then((player) => {
                 // set current player score to 0, in the 'getQuestionEvent' it will be updated
-                pSocketsScoreMap[sock.id].score = 0;
+                self.psh.setScore(sock.id, 0);
 
                 if (hasMoreQuestions) {
                     //there are more questions
@@ -178,10 +177,10 @@ export default class QuestionEventHandler {
             });
     }
 
-    startScoreCountdown(pSocket, score) {
+    startScoreCountdown(pSocket, playerId) {
         let countdown = () => {
             // decrement score
-            score = score - SCORE_MIN_DEGREE;
+            let score = self.psh.getScore(pSocket.id) - SCORE_MIN_DEGREE;
 
             // emit to player his current score value
             pSocket.emit('scoreCountdown', {
@@ -189,21 +188,22 @@ export default class QuestionEventHandler {
             });
 
             // if score > 0 and player still didn't answer a question - continue score countdown
-            if (score > 0 && pSocketsScoreMap[pSocket.id].inAction) {
+            if (score > 0 && self.psh.getInAction(pSocket.id)) {
                 setTimeout(countdown, SCORE_COUNTDOWN_DELAY);
             }
 
             // save player's score state to the map;
-            self.putScoreToMap(pSocket.id, score);
+            self.psh.put(pSocket.id, score);
+
+            // TODO: it's a hack, need to find better way :/
+            if (score === 0) {
+                Player.findOneAndUpdate({_id: playerId}, {$set: {"currentQuestion.score": 0}}, {new: true})
+                    .then((player) => {
+                        console.log(player.currentQuestion);
+                    });
+            }
         };
 
         setTimeout(countdown, SCORE_COUNTDOWN_DELAY);
-    }
-
-    putScoreToMap(pSocket, score) {
-        pSocketsScoreMap[pSocket] = {
-            score: score,
-            inAction: true
-        }
     }
 }
