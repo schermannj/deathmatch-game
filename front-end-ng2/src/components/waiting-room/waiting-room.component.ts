@@ -9,15 +9,13 @@ import {
     IPlayer,
     IUpdateRoomResponse,
     ICountdownParams,
-    IStartCountdownResponse,
-    ISessionStorageState
+    IStartCountdownResponse
 } from "../../util/app.Interfaces";
 import * as _ from "lodash";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {parse} from "url";
 import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
-import {SessionStorage} from "angular2-localstorage/WebStorage";
-import {STATE_STATUS} from "../../util/config.util";
+import {STATE_STATUS, STORAGE_KEYS} from "../../util/config.util";
 
 @Component({
     selector: 'waiting-room',
@@ -30,14 +28,11 @@ import {STATE_STATUS} from "../../util/config.util";
     ]
 })
 export class WaitingRoomComponent {
-    private game: String;
+    private game: string;
     private you: IPlayer;
-    private players: Array<any>;
+    private players: Array<IPlayer>;
     public isPlayerReady: boolean = false;
     public countdown: ICountdownParams;
-
-    @SessionStorage()
-    public state: ISessionStorageState = {};
 
     constructor(private route: ActivatedRoute,
                 private router: Router,
@@ -73,14 +68,11 @@ export class WaitingRoomComponent {
             .once('startTheBattle', () => {
                 self.router.navigate(['/game', self.game, self.you._id]);
                 self.countdown.enabled = false;
-                self.state.status = STATE_STATUS.STARTED;
             });
     }
 
     ngOnInit() {
         let self = this;
-
-        self.state.status = self.state.status ? self.state.status : STATE_STATUS.WAITING;
 
         self.route.params.subscribe((params: IPlayerRoomResponse) => {
             self.game = params.game;
@@ -88,7 +80,10 @@ export class WaitingRoomComponent {
             self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
                 self.you = player;
 
-                self.checkConnection();
+                localStorage.setItem(STORAGE_KEYS.GAME, this.game);
+                localStorage.setItem(STORAGE_KEYS.PLAYER, this.you._id);
+                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.WAITING);
+
                 self.subscribe();
                 self.refreshRoom();
             })
@@ -116,39 +111,7 @@ export class WaitingRoomComponent {
 
         if (allAreReady) {
             this.socket.io().emit('allPlayersAreReady', {game: this.game});
+            localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTED);
         }
-    }
-
-    private checkConnection() {
-        if (!this.socket.hasConnection()) {
-            this.tryToReconnect();
-        } else {
-            this.state.game = this.game;
-            this.state.player = {id: this.you._id};
-        }
-
-        if(this.state.status !== STATE_STATUS.WAITING) {
-            this.open404();
-        }
-    }
-
-    private tryToReconnect() {
-        let self = this;
-        
-        if (self.state.game === self.game && self.state.player.id === self.you._id) {
-            self.socket
-                .connect()
-                .emit('reconnectPlayer', self.state)
-                .once('playerReconnected', (resp: IPlayer) => {
-                    self.you = resp;
-                });
-        } else {
-            this.open404();
-        }
-    }
-
-    private open404() {
-        this.socket.io().removeAllListeners();
-        this.router.navigate(['/404']);
     }
 }

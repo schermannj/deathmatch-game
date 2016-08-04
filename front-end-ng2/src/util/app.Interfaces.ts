@@ -1,60 +1,60 @@
 export interface IPlayerRoomResponse {
-    game: String;
-    player: String;
+    game: string;
+    player: string;
 }
 
 export interface IErrorResponse {
-    message: String;
+    message: string;
 }
 
 export interface IGameResponse {
-    game: String;
+    game: string;
 }
 
 export interface IPlayer {
-    _id: String;
+    _id: string;
     isAdmin: boolean;
-    game: String;
-    name: String;
-    score: Number;
-    state: String;
+    game: string;
+    name: string;
+    score: number;
+    state: string;
 }
 
 export interface IPossibleAnswer {
-    index: Number;
-    text: String;
+    index: number;
+    text: string;
 }
 
 export interface IQuestion {
-    id: String;
+    id: string;
     isRadio: boolean;
-    text: String;
+    text: string;
     possibleAnswers: Array<IPossibleAnswer>;
 
 }
 
 export interface IScoreCountdownResponse {
-    score: Number;
+    score: number;
 }
 
 export interface IReceiveQuestionResponse {
-    qScore: Number;
-    totalScore: Number;
+    qScore: number;
+    totalScore: number;
     question: IQuestion;
 }
 
 export interface IUpdateRoomResponse {
-    game: String;
+    game: string;
     players: Array<IPlayer>;
 }
 
 export interface ICountdownParams {
     enabled: boolean;
-    time?: Number;
+    time?: number;
 }
 
 export interface IStartCountdownResponse {
-    counter: Number
+    counter: number
 }
 
 export interface IAnswerAcceptedResponse {
@@ -64,7 +64,7 @@ export interface IAnswerAcceptedResponse {
 
 export interface IGameOverResponse {
     score: number;
-    game: String;
+    game: string;
 }
 
 export interface IScoreTableResponse {
@@ -73,9 +73,9 @@ export interface IScoreTableResponse {
 }
 
 export interface ISessionStorageState {
-    game?: String;
+    game?: string;
     player?: {
-        id: String;
+        id: string;
     };
-    status?:String;
+    status?:string;
 }

@@ -5,3 +5,8 @@ export const STATE_STATUS = {
     STARTED: 'GAME_STARTED',
     FINISHED: 'GAME_FINISHED'
 };
+export const STORAGE_KEYS = {
+    GAME: 'GAME_ID',
+    PLAYER: 'PLAYER_ID',
+    STATE: 'STATE_STATUS'
+};

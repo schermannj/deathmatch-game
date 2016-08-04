@@ -186,14 +186,14 @@ export default class PlayerEventHandler {
                 }
 
                 // update disconnected player and set to him status CONNECTED, new sock id
-                return Player.findOneAndUpdate({_id: data.player.id, game: data.game}, {$set: setObj}, {new: true});
+                return Player.findOneAndUpdate({_id: data.player, game: data.game}, {$set: setObj}, {new: true});
             })
             .then((player) => {
                 // if player updated successfully -> join the game
                 sock.join(player.game);
 
                 // notify FE that player successfully joined the game
-                sock.emit('playerReconnected', player);
+                sock.emit('playerReconnected');
             }, ExceptionHandlerService.validate)
             .catch((err) => {
                 self.log.debug(err.message);
