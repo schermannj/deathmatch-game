@@ -9,6 +9,7 @@ import {SocketService} from "../../services/socket.service";
 import {WaitingRoomActivateGuard} from "../waiting-room/waiting-room.activate.guard";
 import {GameRoomDeactivateGuard} from "../game-room/game-room.deactivate.guard";
 import {GameRoomActivateGuard} from "../game-room/game-room.activate.guard";
+import {ScoreTableDeactivateGuard} from "../score-table-room/score-table.deactivate.guard";
 
 export const routes: RouterConfig = [
     {path: '', component: CreateRoomComponent},
@@ -20,7 +21,7 @@ export const routes: RouterConfig = [
         canActivate: [GameRoomActivateGuard],
         canDeactivate: [GameRoomDeactivateGuard]
     },
-    {path: 'scores/:game', component: ScoreTableRoomComponent},
+    {path: 'scores/:game', component: ScoreTableRoomComponent, canDeactivate: [ScoreTableDeactivateGuard]},
     {path: '404', component: NotFoundComponent},
     {path: '**', redirectTo: '/404'}
 ];
@@ -30,5 +31,6 @@ export const appRouterProviders = [
     SocketService,
     WaitingRoomActivateGuard,
     GameRoomActivateGuard,
-    GameRoomDeactivateGuard
+    GameRoomDeactivateGuard,
+    ScoreTableDeactivateGuard
 ];

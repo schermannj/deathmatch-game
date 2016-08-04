@@ -43,8 +43,6 @@ export class GameRoomComponent implements OnInit {
     public question: IQuestion;
     public answer: any;
     public checkingAnswer: boolean = false;
-
-    // TODO: move it to questions state or something..
     public playerGameScore: number = 0;
     public currentQuestionScore: number;
 
