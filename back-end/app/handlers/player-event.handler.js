@@ -125,12 +125,15 @@ export default class PlayerEventHandler {
      * @this is a socket obj;
      */
     playerLeaveEvent() {
+        let sock = this;
+
+        self.log.debug(`Player disconnected. Socket - ${sock.id}`);
 
         // stop score countdown if it's possible
-        self.psh.setInAction(this.id, false);
+        self.psh.setInAction(sock.id, false);
 
         // try to get player question score
-        let score = self.psh.getScore(this.id);
+        let score = self.psh.getScore(sock.id);
 
         // set player's score to question state and update player
         let setObj = {state: PLAYER_CONST.STATE.DISCONNECTED};
@@ -152,6 +155,8 @@ export default class PlayerEventHandler {
                 //     throw new Error('Game doesn\'t exist!')
                 // }
 
+                self.log.debug(`PlayerEventHandler: player disconnected. Socket - ${sock.id}. Player id - ${disconnectedPlayer._id}`);
+
                 // find all players who didn't leave the game
                 return Player.find({game: disconnectedPlayer.game, state: {$ne: PLAYER_CONST.STATE.DISCONNECTED}});
 
@@ -163,15 +168,10 @@ export default class PlayerEventHandler {
                 });
 
                 if (didGameStart) {
-                    // find finished players
-                    let finishedPlayers = _.filter(players, (player) => {
-                        return player.state === PLAYER_CONST.STATE.FINISHED;
-                    });
-
-                    // emit an event and update score table data for all finished players from this game
-                    for (let player of finishedPlayers) {
-                        self.io.to(player.socket).emit(EVENTS.FE.DO_REFRESH_CYCLE);
-                    }
+                    // emit an event and update score table data for all finished players from this game.
+                    // actually I emit to all players from the game but only the one who finished the game
+                    // subscribed on that event
+                    self.io.sockets.in(didGameStart.game).emit(EVENTS.FE.DO_REFRESH_CYCLE);
                 } else if (players && players.length > 0) {
                     let game = players[0].game;
 
@@ -221,6 +221,9 @@ export default class PlayerEventHandler {
                 return Player.findOneAndUpdate({_id: data.player, game: data.game}, {$set: setObj}, {new: true});
             })
             .then((player) => {
+
+                self.log.debug(`PlayerEventHandler: player reconnected. Socket - ${sock.id}. Player id - ${player._id}`);
+
                 // if player updated successfully -> join the game
                 sock.join(player.game);
 

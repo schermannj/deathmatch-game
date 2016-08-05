@@ -93,7 +93,7 @@ export class WaitingRoomComponent {
             })
             .once(EVENTS.FE.PREPARE_GAME_ROOM, () => {
                 this.countdown.enabled = true;
-                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTED);
+                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTING);
             })
             .on(EVENTS.FE.START_COUNTDOWN, (resp: IStartCountdownResponse) => {
                 self.countdown.time = resp.counter;

@@ -102,6 +102,8 @@ export class GameRoomComponent implements OnInit {
             self.rest.getPlayer(params.player).subscribe((player: IPlayer) => {
                 self.player = player;
 
+                localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTED);
+
                 self.subscribe();
                 self.getQuestion();
             })

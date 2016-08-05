@@ -37,6 +37,9 @@ export class GameRoomActivateGuard implements CanActivate {
                     });
             });
 
+        } else if (gameState === STATE_STATUS.STARTING && areStateParamsEqual && this.socket.hasConnection()) {
+
+            return true;
         } else if (gameState === STATE_STATUS.FINISHED) {
             this.router.navigate(['/scores', params.game]);
         } else {
