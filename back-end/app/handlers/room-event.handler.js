@@ -174,7 +174,7 @@ export default class RoomEventHandler {
 
                 // if all players finished the game then we're gonna look for the winner
                 if (players.length === finishedPlayers.length) {
-                    //TODO: right now even if player disconnected but he had more scores then other players he will win that game
+                    //TODO: right now even if player disconnected but he had more scores then other players he wilwl win that game
                     resp.winner = _.maxBy(players, (player) => player.score);
                 }
 
