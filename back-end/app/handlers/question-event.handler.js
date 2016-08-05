@@ -8,16 +8,16 @@ import * as log4js from "log4js";
 let self;
 export default class QuestionEventHandler {
 
-    constructor(gameIo, gameSocket, ehs, psh) {
+    constructor(io, socket, ehs, psh) {
         self = this;
 
         self.log = log4js.getLogger();
-        self.gameIo = gameIo;
+        self.io = io;
         self.ehs = ehs;
         self.psh = psh;
 
-        gameSocket.on('getQuestion', this.getQuestionEvent);
-        gameSocket.on('answer', this.answerQuestionEvent);
+        socket.on('getQuestion', this.getQuestionEvent);
+        socket.on('answer', this.answerQuestionEvent);
     }
 
     /**
@@ -155,7 +155,7 @@ export default class QuestionEventHandler {
                     });
 
                     // emit an event and update score table data for other users from this game
-                    self.gameIo.sockets.in(data.game).emit('doRefreshCycle');
+                    self.io.sockets.in(data.game).emit('doRefreshCycle');
                 }
             }, ExceptionHandlerService.validate)
             .catch((err) => {

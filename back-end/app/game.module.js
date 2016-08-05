@@ -4,11 +4,11 @@ import {DO_MONGO_DUMP} from './config/constants';
 
 export default class GameModule {
 
-    constructor(io, socket) {
+    constructor(io) {
         if (DO_MONGO_DUMP) {
             MongoDumpService.doQuestionDump();
         }
 
-        new GameEventHandler(io, socket);
+        new GameEventHandler(io);
     }
 }

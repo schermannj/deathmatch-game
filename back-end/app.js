@@ -53,12 +53,14 @@ server.on('listening', onListening);
 /**
  * Configure sockets
  */
-
-io.sockets.on('connection', (socket) => {
-    new GameModule(io, socket);
-});
 io.set('origins', 'http://localhost:8888');
 
+
+
+/**
+ * Bootstrap game module
+ * */
+new GameModule(io);
 
 /**
  * Normalize a port into a number, string, or false.

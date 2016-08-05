@@ -10,18 +10,18 @@ import {PLAYER_START_SCORE} from "../config/constants";
 let self;
 export default class PlayerEventHandler {
 
-    constructor(gameIo, gameSocket, ehs, psh) {
+    constructor(io, socket, ehs, psh) {
         self = this;
 
         self.log = log4js.getLogger();
-        self.gameIo = gameIo;
+        self.io = io;
         self.ehs = ehs;
         self.psh = psh;
 
-        gameSocket.on('disconnect', this.playerLeaveEvent);
-        gameSocket.on('playerIsReady', this.playerIsReadyEvent);
-        gameSocket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
-        gameSocket.on('reconnectPlayer', this.reconnectPlayer);
+        socket.on('disconnect', this.playerLeaveEvent);
+        socket.on('playerIsReady', this.playerIsReadyEvent);
+        socket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
+        socket.on('reconnectPlayer', this.reconnectPlayer);
     }
 
     /**
@@ -45,7 +45,7 @@ export default class PlayerEventHandler {
             .then((players) => {
 
                 // send updated status to all active players from the game
-                self.gameIo.sockets.in(data.game).emit('updateRoom', {players: players});
+                self.io.sockets.in(data.game).emit('updateRoom', {players: players});
 
             }, ExceptionHandlerService.validate)
             .catch((err) => {
@@ -100,7 +100,7 @@ export default class PlayerEventHandler {
             }, ExceptionHandlerService.validate)
             .then(() => {
                 // notify FE about game event
-                self.gameIo.sockets.in(data.game).emit('prepareGameRoom');
+                self.io.sockets.in(data.game).emit('prepareGameRoom');
 
                 // start countdown
                 return self.startCountdown(data.game);
@@ -108,7 +108,7 @@ export default class PlayerEventHandler {
             }, ExceptionHandlerService.validate)
             .then(() => {
                 // start game when countdown has been finished
-                self.gameIo.sockets.in(data.game).emit('startTheBattle');
+                self.io.sockets.in(data.game).emit('startTheBattle');
 
             }, ExceptionHandlerService.validate)
             .catch((err) => {
@@ -165,7 +165,7 @@ export default class PlayerEventHandler {
 
                     // emit an event and update score table data for all finished players from this game
                     for (let player of finishedPlayers) {
-                        self.gameIo.to(player.socket).emit('doRefreshCycle');
+                        self.io.to(player.socket).emit('doRefreshCycle');
                     }
                 } else if (players && players.length > 0) {
                     let game = players[0].game;
@@ -179,14 +179,14 @@ export default class PlayerEventHandler {
                         );
                     } else {
                         // if there are some players and game didn't start, send them an event and update room
-                        self.gameIo.sockets.in(game).emit('updateRoom', {players: players});
+                        self.io.sockets.in(game).emit('updateRoom', {players: players});
                     }
                 }
             }, ExceptionHandlerService.validate)
             .then((admin) => {
                 // emit event to new admin and give him access rights
                 if (admin) {
-                    self.gameIo.to(admin.socket).emit('grantAdminRights');
+                    self.io.to(admin.socket).emit('grantAdminRights');
                 }
             })
             .catch((err) => {
@@ -232,7 +232,7 @@ export default class PlayerEventHandler {
             let count = COUNTDOWN_COUNT;
 
             let countdownFunc = () => {
-                self.gameIo.sockets.in(game).emit('startCountdown', {counter: count});
+                self.io.sockets.in(game).emit('startCountdown', {counter: count});
 
                 // decrement counter state
                 count--;

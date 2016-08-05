@@ -8,17 +8,17 @@ import * as log4js from 'log4js';
 let self;
 export default class RoomEventHandler {
 
-    constructor(gameIo, gameSocket, ehs) {
+    constructor(io, socket, ehs) {
         self = this;
 
         self.log = log4js.getLogger();
-        self.gameIo = gameIo;
+        self.io = io;
         self.ehs = ehs;
 
-        gameSocket.on('createRoom', this.createRoomEvent);
-        gameSocket.on('joinRoom', this.joinRoomEvent);
-        gameSocket.on('refreshRoom', this.refreshRoomEvent);
-        gameSocket.on('getTableScore', this.getTableScoreEvent);
+        socket.on('createRoom', this.createRoomEvent);
+        socket.on('joinRoom', this.joinRoomEvent);
+        socket.on('refreshRoom', this.refreshRoomEvent);
+        socket.on('getTableScore', this.getTableScoreEvent);
     }
 
     /**
@@ -105,7 +105,7 @@ export default class RoomEventHandler {
                 sock.join(data.game);
 
                 // send event to all players from this game
-                self.gameIo.sockets.in(data.game).emit('playerJoined', {
+                self.io.sockets.in(data.game).emit('playerJoined', {
                     game: data.game,
                     player: player._id
                 });
@@ -127,7 +127,7 @@ export default class RoomEventHandler {
             .then((players) => {
 
                 // send event to all players from this game
-                self.gameIo.sockets.in(data.game).emit('updateRoom', {
+                self.io.sockets.in(data.game).emit('updateRoom', {
                     game: data.game,
                     players: players
                 });
