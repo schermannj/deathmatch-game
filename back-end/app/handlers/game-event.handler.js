@@ -1,8 +1,10 @@
-import PlayerEventHandler from "./player-event.handler";
-import RoomEventHandler from "./room-event.handler";
-import QuestionEventHandler from "./question-event.handler";
-import ExceptionHandlerService from "../services/exception-handler.service";
-import PlayerScoreHolder from "../services/player-score.holder";
+//noinspection JSFileReferences
+import EVENTS from 'shared-util/event.constants.js';
+import PlayerEventHandler from './player-event.handler';
+import RoomEventHandler from './room-event.handler';
+import QuestionEventHandler from './question-event.handler';
+import ExceptionHandlerService from '../services/exception-handler.service';
+import PlayerScoreHolder from '../services/player-score.holder';
 
 export default class GameEventHandler {
 
@@ -16,7 +18,7 @@ export default class GameEventHandler {
     subscribe() {
         let self = this;
 
-        self.io.sockets.on('connection', (socket) => {
+        self.io.sockets.on(EVENTS.BE.CONNECTION, (socket) => {
             let ehs = new ExceptionHandlerService(socket);
 
             new RoomEventHandler(self.io, socket, ehs);

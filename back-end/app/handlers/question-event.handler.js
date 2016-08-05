@@ -1,3 +1,5 @@
+//noinspection JSFileReferences
+import EVENTS from 'shared-util/event.constants.js';
 import * as _ from "lodash";
 import Question from "../models/Question";
 import Player from "../models/Player";
@@ -16,8 +18,8 @@ export default class QuestionEventHandler {
         self.ehs = ehs;
         self.psh = psh;
 
-        socket.on('getQuestion', this.getQuestionEvent);
-        socket.on('answer', this.answerQuestionEvent);
+        socket.on(EVENTS.BE.GET_QUESTION, this.getQuestionEvent);
+        socket.on(EVENTS.BE.ANSWER, this.answerQuestionEvent);
     }
 
     /**
@@ -49,7 +51,7 @@ export default class QuestionEventHandler {
                 let player = resp[1];
 
                 // emit question object and player scores to the player
-                sock.emit('receiveQuestion', {
+                sock.emit(EVENTS.FE.RECEIVE_QUESTION, {
                     question: {
                         id: question._id,
                         text: question.question,
@@ -143,19 +145,19 @@ export default class QuestionEventHandler {
 
                 if (hasMoreQuestions) {
                     //there are more questions
-                    sock.emit('answerAccepted', {
+                    sock.emit(EVENTS.FE.ANSWER_ACCEPTED, {
                         totalScore: player.score,
                         isCorrect: isCorrect
                     });
                 } else {
                     //that was the the last question
-                    sock.emit('gameOver', {
+                    sock.emit(EVENTS.FE.GAME_OVER, {
                         score: player.score,
                         game: data.game
                     });
 
                     // emit an event and update score table data for other users from this game
-                    self.io.sockets.in(data.game).emit('doRefreshCycle');
+                    self.io.sockets.in(data.game).emit(EVENTS.FE.DO_REFRESH_CYCLE);
                 }
             }, ExceptionHandlerService.validate)
             .catch((err) => {
@@ -169,7 +171,7 @@ export default class QuestionEventHandler {
             let score = self.psh.getScore(pSocket.id) - SCORE_MIN_DEGREE;
 
             // emit to player his current score value
-            pSocket.emit('scoreCountdown', {
+            pSocket.emit(EVENTS.FE.SCORE_COUNTDOWN, {
                 score: score
             });
 

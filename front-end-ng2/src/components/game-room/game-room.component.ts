@@ -21,6 +21,7 @@ import {MdUniqueSelectionDispatcher} from "@angular2-material/core";
 import {AcceptAnswerModalComponent} from "./accept-answer/accept-answer.modal.component";
 import {GameOverModalComponent} from "./game-over/game-over.modal.component";
 import {STORAGE_KEYS, STATE_STATUS, PLAYER_START_SCORE} from "../../util/config.util";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'game-room',
@@ -76,7 +77,7 @@ export class GameRoomComponent implements OnInit {
     public getQuestion() {
         this.socket
             .io()
-            .emit('getQuestion', {
+            .emit(EVENTS.BE.GET_QUESTION, {
                 game: this.game,
                 player: this.player
             });
@@ -110,7 +111,7 @@ export class GameRoomComponent implements OnInit {
     private doAnswer(answer: Array<any>) {
         this.checkingAnswer = true;
 
-        this.socket.io().emit('answer', {
+        this.socket.io().emit(EVENTS.BE.ANSWER, {
             game: this.game,
             player: this.player,
             question: {
@@ -125,19 +126,19 @@ export class GameRoomComponent implements OnInit {
 
         self.socket
             .io()
-            .on('answerAccepted', (resp: IAnswerAcceptedResponse) => {
+            .on(EVENTS.FE.ANSWER_ACCEPTED, (resp: IAnswerAcceptedResponse) => {
                 self.acceptAnswerModal.open(resp);
             })
-            .once('gameOver', (resp: IGameOverResponse) => {
+            .once(EVENTS.FE.GAME_OVER, (resp: IGameOverResponse) => {
                 localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.FINISHED);
                 self.gameOverModal.open(resp);
             })
-            .on('receiveQuestion', (resp: IReceiveQuestionResponse) => {
+            .on(EVENTS.FE.RECEIVE_QUESTION, (resp: IReceiveQuestionResponse) => {
                 self.question = resp.question;
                 self.currentQuestionScore = resp.qScore;
                 self.playerGameScore = resp.totalScore;
             })
-            .on('scoreCountdown', (resp: IScoreCountdownResponse) => {
+            .on(EVENTS.FE.SCORE_COUNTDOWN, (resp: IScoreCountdownResponse) => {
                 self.currentQuestionScore = resp.score;
             });
     }

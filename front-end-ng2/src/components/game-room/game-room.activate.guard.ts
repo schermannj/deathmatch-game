@@ -4,6 +4,7 @@ import {Observable} from "rxjs/Observable";
 import {STORAGE_KEYS, STATE_STATUS, PLAYER_STATE} from "../../util/config.util";
 import {Subscriber} from "rxjs";
 import {SocketService} from "../../services/socket.service";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Injectable()
 export class GameRoomActivateGuard implements CanActivate {
@@ -25,11 +26,11 @@ export class GameRoomActivateGuard implements CanActivate {
 
             return Observable.create((subscriber: Subscriber<boolean>) => {
                 this.socket.connect()
-                    .once('playerReconnected', () => {
+                    .once(EVENTS.FE.PLAYER_RECONNECTED, () => {
                         subscriber.next(true);
                         subscriber.complete();
                     })
-                    .emit('reconnectPlayer', {game: params.game, player: params.player, state: PLAYER_STATE.STARTED});
+                    .emit(EVENTS.BE.RECONNECT, {game: params.game, player: params.player, state: PLAYER_STATE.STARTED});
             });
 
         } else if (gameState === STATE_STATUS.FINISHED) {

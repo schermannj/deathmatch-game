@@ -7,6 +7,7 @@ import {IGameResponse, IPlayerRoomResponse} from "../../util/app.Interfaces";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {MD_INPUT_DIRECTIVES} from "@angular2-material/input";
 import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'join-room',
@@ -30,14 +31,14 @@ export class JoinRoomComponent extends BaseConnectToRoomComponent {
     }
 
     protected doOnEnterPressed() {
-        this.socket.io().emit('joinRoom', {game: this.game, username: this.nickname});
+        this.socket.io().emit(EVENTS.BE.JOIN_ROOM, {game: this.game, username: this.nickname});
     }
 
     protected subscribe() {
         let self: any = this;
 
         self.socket.io()
-            .once('playerJoined', (resp: IPlayerRoomResponse) => {
+            .once(EVENTS.FE.PLAYER_JOINED, (resp: IPlayerRoomResponse) => {
                 self.router.navigate(['/room', resp.game, resp.player]);
             });
     }

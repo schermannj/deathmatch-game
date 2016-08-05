@@ -4,6 +4,7 @@ import {Observable} from "rxjs/Observable";
 import {Subscriber} from "rxjs/Subscriber";
 import {STORAGE_KEYS, STATE_STATUS, PLAYER_STATE} from "../../util/config.util";
 import {SocketService} from "../../services/socket.service";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Injectable()
 export class WaitingRoomActivateGuard implements CanActivate {
@@ -22,11 +23,11 @@ export class WaitingRoomActivateGuard implements CanActivate {
         if (areStateParamsEqual && cameFromWaitingRoom) {
             return Observable.create((subscriber: Subscriber<boolean>) => {
                 this.socket.connect()
-                    .once('playerReconnected', () => {
+                    .once(EVENTS.FE.PLAYER_RECONNECTED, () => {
                         subscriber.next(true);
                         subscriber.complete();
                     })
-                    .emit('reconnectPlayer', {game: params.game, player: params.player, state: PLAYER_STATE.CONNECTED});
+                    .emit(EVENTS.BE.RECONNECT, {game: params.game, player: params.player, state: PLAYER_STATE.CONNECTED});
             });
         } else if (!areStateParamsEqual && this.socket.hasConnection()) {
 

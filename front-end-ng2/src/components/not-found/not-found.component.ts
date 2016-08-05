@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
 import "./not-found.component.scss";
 import {MD_CARD_DIRECTIVES} from "@angular2-material/card";
-import {ROUTER_DIRECTIVES, Router} from "@angular/router";
+import {ROUTER_DIRECTIVES} from "@angular/router";
 
 @Component({
     selector: 'not-found',
@@ -12,10 +12,4 @@ import {ROUTER_DIRECTIVES, Router} from "@angular/router";
     ]
 })
 export class NotFoundComponent {
-
-    constructor(private router: Router) {
-        setTimeout(() => {
-            router.navigate(['/']);
-        }, 5000);
-    }
 }

@@ -1,0 +1,13 @@
+{
+  "plugins": [
+    [
+      "module-alias",
+      [
+        {
+          "src": "../shared-util",
+          "expose": "shared-util"
+        }
+      ]
+    ]
+  ]
+}

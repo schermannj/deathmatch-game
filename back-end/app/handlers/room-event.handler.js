@@ -1,3 +1,5 @@
+//noinspection JSFileReferences
+import EVENTS from 'shared-util/event.constants.js';
 import * as _ from 'lodash';
 import Game from '../models/Game';
 import Player from '../models/Player';
@@ -15,10 +17,10 @@ export default class RoomEventHandler {
         self.io = io;
         self.ehs = ehs;
 
-        socket.on('createRoom', this.createRoomEvent);
-        socket.on('joinRoom', this.joinRoomEvent);
-        socket.on('refreshRoom', this.refreshRoomEvent);
-        socket.on('getTableScore', this.getTableScoreEvent);
+        socket.on(EVENTS.BE.CREATE_ROOM, this.createRoomEvent);
+        socket.on(EVENTS.BE.JOIN_ROOM, this.joinRoomEvent);
+        socket.on(EVENTS.BE.REFRESH_ROOM, this.refreshRoomEvent);
+        socket.on(EVENTS.BE.GET_TABLE_SCORE, this.getTableScoreEvent);
     }
 
     /**
@@ -53,7 +55,7 @@ export default class RoomEventHandler {
                 sock.join(savedGame._id);
 
                 // send event to FE, to the joined player
-                sock.emit('roomCreated', {
+                sock.emit(EVENTS.FE.ROOM_CREATED, {
                     game: savedGame._id,
                     player: player._id
                 });
@@ -105,7 +107,7 @@ export default class RoomEventHandler {
                 sock.join(data.game);
 
                 // send event to all players from this game
-                self.io.sockets.in(data.game).emit('playerJoined', {
+                self.io.sockets.in(data.game).emit(EVENTS.FE.PLAYER_JOINED, {
                     game: data.game,
                     player: player._id
                 });
@@ -127,7 +129,7 @@ export default class RoomEventHandler {
             .then((players) => {
 
                 // send event to all players from this game
-                self.io.sockets.in(data.game).emit('updateRoom', {
+                self.io.sockets.in(data.game).emit(EVENTS.FE.UPDATE_ROOM, {
                     game: data.game,
                     players: players
                 });
@@ -175,7 +177,7 @@ export default class RoomEventHandler {
                 }
 
                 //send new data
-                sock.emit('refreshScoreTable', resp);
+                sock.emit(EVENTS.FE.REFRESH_SCORE_TABLE, resp);
 
             }, ExceptionHandlerService.validate)
             .catch((err) => {

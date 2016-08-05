@@ -6,6 +6,7 @@ import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router} from "@angular/router";
 import {IPlayerRoomResponse} from "../../util/app.Interfaces";
 import {BaseConnectToRoomComponent} from "../base.connect-to-room.component";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'create-room',
@@ -19,14 +20,14 @@ export class CreateRoomComponent extends BaseConnectToRoomComponent {
     }
 
     protected doOnEnterPressed() {
-        this.socket.io().emit('createRoom', {username: this.nickname});
+        this.socket.io().emit(EVENTS.BE.CREATE_ROOM, {username: this.nickname});
     }
 
     protected subscribe() {
         let self: any = this;
 
         self.socket.io()
-            .once('roomCreated', (resp: IPlayerRoomResponse) => {
+            .once(EVENTS.FE.ROOM_CREATED, (resp: IPlayerRoomResponse) => {
                 self.router.navigate(['/room', resp.game, resp.player]);
             });
     }

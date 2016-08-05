@@ -1,3 +1,5 @@
+//noinspection JSFileReferences
+import EVENTS from 'shared-util/event.constants.js';
 import * as log4js from 'log4js';
 
 export default class ExceptionHandlerService {
@@ -20,7 +22,7 @@ export default class ExceptionHandlerService {
     }
 
     static emitError(sock, err) {
-        sock.emit('serverError', {message: err.message});
+        sock.emit(EVENTS.FE.SERVER_ERROR, {message: err.message});
     }
 
     doesGameExist(game) {
@@ -30,7 +32,7 @@ export default class ExceptionHandlerService {
 
     validateGameExistence(game, sock) {
         if (!this.doesGameExist(game)) {
-            sock.emit('serverError', {message: "This game does not exist."});
+            sock.emit(EVENTS.FE.SERVER_ERROR, {message: "This game does not exist."});
 
             return false;
         }

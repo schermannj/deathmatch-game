@@ -16,6 +16,7 @@ import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {parse} from "url";
 import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
 import {STATE_STATUS, STORAGE_KEYS} from "../../util/config.util";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'waiting-room',
@@ -47,7 +48,7 @@ export class WaitingRoomComponent {
 
     public doReady() {
         this.isPlayerReady = true;
-        this.socket.io().emit('playerIsReady', {game: this.game, player: this.you});
+        this.socket.io().emit(EVENTS.BE.PLAYER_IS_READY, {game: this.game, player: this.you});
     }
 
     public copyLinkToJoinRoom() {
@@ -80,38 +81,38 @@ export class WaitingRoomComponent {
         let self: any = this;
 
         self.socket.io()
-            .on('updateRoom', (resp: IUpdateRoomResponse) => {
+            .on(EVENTS.FE.UPDATE_ROOM, (resp: IUpdateRoomResponse) => {
                 self.players = resp.players;
 
                 if (self.you.isAdmin) {
                     self.checkIfAllPlayersAreReady();
                 }
             })
-            .on('grantAdminRights', () => {
+            .on(EVENTS.FE.GRANT_ADMIN_RIGHTS, () => {
                 self.you.isAdmin = true;
             })
-            .once('prepareGameRoom', () => {
+            .once(EVENTS.FE.PREPARE_GAME_ROOM, () => {
                 this.countdown.enabled = true;
                 localStorage.setItem(STORAGE_KEYS.STATE, STATE_STATUS.STARTED);
             })
-            .on('startCountdown', (resp: IStartCountdownResponse) => {
+            .on(EVENTS.FE.START_COUNTDOWN, (resp: IStartCountdownResponse) => {
                 self.countdown.time = resp.counter;
             })
-            .once('startTheBattle', () => {
+            .once(EVENTS.FE.START_BATTLE, () => {
                 self.router.navigate(['/game', self.game, self.you._id]);
                 self.countdown.enabled = false;
             });
     }
 
     private refreshRoom() {
-        this.socket.io().emit('refreshRoom', {game: this.game});
+        this.socket.io().emit(EVENTS.BE.REFRESH_ROOM, {game: this.game});
     }
 
     private checkIfAllPlayersAreReady() {
         let allAreReady = _.filter(this.players, (player: IPlayer) => player.state === 'CONNECTED').length == 0;
 
         if (allAreReady) {
-            this.socket.io().emit('allPlayersAreReady', {game: this.game});
+            this.socket.io().emit(EVENTS.BE.ALL_PLAYERS_ARE_READY, {game: this.game});
         }
     }
 }

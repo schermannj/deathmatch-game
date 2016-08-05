@@ -17,6 +17,12 @@ module.exports = {
     devtool: 'cheap-module-eval-source-map',
 
     resolve: {
+        root: [
+            path.resolve('../shared-util')
+        ],
+        alias: {
+            'event-constants': 'event.constants.js'
+        },
         extensions: ['', '.js', '.ts']
     },
 

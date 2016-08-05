@@ -5,6 +5,7 @@ import {SocketService} from "../../services/socket.service";
 import {ROUTER_DIRECTIVES, Router, ActivatedRoute} from "@angular/router";
 import {IPlayer, IGameResponse, IScoreTableResponse} from "../../util/app.Interfaces";
 import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
+import {EVENTS} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'score-table-room',
@@ -48,16 +49,16 @@ export class ScoreTableRoomComponent implements OnInit {
 
         self.socket
             .connect()
-            .on('refreshScoreTable', (resp: IScoreTableResponse) => {
+            .on(EVENTS.FE.REFRESH_SCORE_TABLE, (resp: IScoreTableResponse) => {
                 self.players = resp.players;
                 self.winner = resp.winner;
             })
-            .on('doRefreshCycle', () => {
+            .on(EVENTS.FE.DO_REFRESH_CYCLE, () => {
                 self.refresh();
             });
     }
 
     private refresh() {
-        this.socket.io().emit('getTableScore', {game: this.game});
+        this.socket.io().emit(EVENTS.BE.GET_TABLE_SCORE, {game: this.game});
     }
 }

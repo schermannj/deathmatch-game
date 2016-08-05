@@ -1,3 +1,5 @@
+//noinspection JSFileReferences
+import EVENTS from 'shared-util/event.constants.js';
 import * as _ from 'lodash';
 import Game from '../models/Game';
 import Question from '../models/Question';
@@ -18,10 +20,10 @@ export default class PlayerEventHandler {
         self.ehs = ehs;
         self.psh = psh;
 
-        socket.on('disconnect', this.playerLeaveEvent);
-        socket.on('playerIsReady', this.playerIsReadyEvent);
-        socket.on('allPlayersAreReady', this.allPlayersAreReadyEvent);
-        socket.on('reconnectPlayer', this.reconnectPlayer);
+        socket.on(EVENTS.BE.DISCONNECT, this.playerLeaveEvent);
+        socket.on(EVENTS.BE.PLAYER_IS_READY, this.playerIsReadyEvent);
+        socket.on(EVENTS.BE.ALL_PLAYERS_ARE_READY, this.allPlayersAreReadyEvent);
+        socket.on(EVENTS.BE.RECONNECT, this.reconnectPlayer);
     }
 
     /**
@@ -45,7 +47,7 @@ export default class PlayerEventHandler {
             .then((players) => {
 
                 // send updated status to all active players from the game
-                self.io.sockets.in(data.game).emit('updateRoom', {players: players});
+                self.io.sockets.in(data.game).emit(EVENTS.FE.UPDATE_ROOM, {players: players});
 
             }, ExceptionHandlerService.validate)
             .catch((err) => {
@@ -100,7 +102,7 @@ export default class PlayerEventHandler {
             }, ExceptionHandlerService.validate)
             .then(() => {
                 // notify FE about game event
-                self.io.sockets.in(data.game).emit('prepareGameRoom');
+                self.io.sockets.in(data.game).emit(EVENTS.FE.PREPARE_GAME_ROOM);
 
                 // start countdown
                 return self.startCountdown(data.game);
@@ -108,7 +110,7 @@ export default class PlayerEventHandler {
             }, ExceptionHandlerService.validate)
             .then(() => {
                 // start game when countdown has been finished
-                self.io.sockets.in(data.game).emit('startTheBattle');
+                self.io.sockets.in(data.game).emit(EVENTS.FE.START_BATTLE);
 
             }, ExceptionHandlerService.validate)
             .catch((err) => {
@@ -165,7 +167,7 @@ export default class PlayerEventHandler {
 
                     // emit an event and update score table data for all finished players from this game
                     for (let player of finishedPlayers) {
-                        self.io.to(player.socket).emit('doRefreshCycle');
+                        self.io.to(player.socket).emit(EVENTS.FE.DO_REFRESH_CYCLE);
                     }
                 } else if (players && players.length > 0) {
                     let game = players[0].game;
@@ -179,14 +181,14 @@ export default class PlayerEventHandler {
                         );
                     } else {
                         // if there are some players and game didn't start, send them an event and update room
-                        self.io.sockets.in(game).emit('updateRoom', {players: players});
+                        self.io.sockets.in(game).emit(EVENTS.FE.UPDATE_ROOM, {players: players});
                     }
                 }
             }, ExceptionHandlerService.validate)
             .then((admin) => {
                 // emit event to new admin and give him access rights
                 if (admin) {
-                    self.io.to(admin.socket).emit('grantAdminRights');
+                    self.io.to(admin.socket).emit(EVENTS.FE.GRANT_ADMIN_RIGHTS);
                 }
             })
             .catch((err) => {
@@ -220,7 +222,7 @@ export default class PlayerEventHandler {
                 sock.join(player.game);
 
                 // notify FE that player successfully joined the game
-                sock.emit('playerReconnected');
+                sock.emit(EVENTS.FE.PLAYER_RECONNECTED);
             }, ExceptionHandlerService.validate)
             .catch((err) => {
                 self.log.debug(err.message);
@@ -232,7 +234,7 @@ export default class PlayerEventHandler {
             let count = COUNTDOWN_COUNT;
 
             let countdownFunc = () => {
-                self.io.sockets.in(game).emit('startCountdown', {counter: count});
+                self.io.sockets.in(game).emit(EVENTS.FE.START_COUNTDOWN, {counter: count});
 
                 // decrement counter state
                 count--;
