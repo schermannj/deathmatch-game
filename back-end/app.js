@@ -23,7 +23,7 @@ app.set('port', port);
 
 app.use(logger('dev'));
 app.use(cors({
-        origin: 'http://localhost:8888',
+        origin: '*',
         credentials: true
     })
 );
@@ -53,7 +53,7 @@ server.on('listening', onListening);
 /**
  * Configure sockets
  */
-io.set('origins', 'http://localhost:8888');
+io.set('origins', '*:8888');
 
 
 

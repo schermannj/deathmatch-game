@@ -9,6 +9,7 @@ import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
 import {COUNTDOWN_COUNT, COUNTDOWN_DELAY} from "../config/constants";
 import * as log4js from 'log4js';
+import {QUESTION_PER_GAME} from "../config/constants";
 
 let self;
 export default class PlayerEventHandler {
@@ -85,7 +86,7 @@ export default class PlayerEventHandler {
 
             }, ExceptionHandlerService.validate)
             .then((questions) => {
-                let gameQuestions = self.get5RandomQuestionsIds(questions);
+                let gameQuestions = self.getRandomQuestionsIds(questions);
                 let firstQuestion = gameQuestions.shift();
 
                 // save 5 random selected questions to all players' objects and set first question to each player
@@ -257,8 +258,8 @@ export default class PlayerEventHandler {
         });
     }
 
-    get5RandomQuestionsIds(questions) {
-        if (questions.length <= 5) {
+    getRandomQuestionsIds(questions) {
+        if (questions.length <= QUESTION_PER_GAME) {
 
             return _.map(questions, (q) => {
                 return q._id;
@@ -267,15 +268,14 @@ export default class PlayerEventHandler {
         } else {
 
             let randomQuestions = [];
-            let max = questions.length;
 
-            while (randomQuestions.length < 5) {
-                let rIndex = Math.floor(Math.random() * max);
+            while (randomQuestions.length < QUESTION_PER_GAME) {
+                let rIndex = Math.floor(Math.random() * QUESTION_PER_GAME);
                 let rQuestionId = questions[rIndex]._id;
                 let found = false;
 
                 for (let i = 0; i < randomQuestions.length; i++) {
-                    if (randomQuestions[i]._id == rQuestionId) {
+                    if (randomQuestions[i] === rQuestionId) {
                         found = true;
                         break;
                     }
