@@ -2,9 +2,9 @@ import {CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router} from "
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs/Observable";
 import {Subscriber} from "rxjs/Subscriber";
-import {STORAGE_KEYS, STATE_STATUS, PLAYER_STATE} from "../../util/config.util";
+import {STORAGE_KEYS, STATE_STATUS} from "../../util/config.util";
 import {SocketService} from "../../services/socket.service";
-import {EVENTS} from '../../util/shared-util.adapter';
+import {EVENTS, PLAYER_CONST} from '../../util/shared-util.adapter';
 
 @Injectable()
 export class WaitingRoomActivateGuard implements CanActivate {
@@ -27,7 +27,7 @@ export class WaitingRoomActivateGuard implements CanActivate {
                         subscriber.next(true);
                         subscriber.complete();
                     })
-                    .emit(EVENTS.BE.RECONNECT, {game: params.game, player: params.player, state: PLAYER_STATE.CONNECTED});
+                    .emit(EVENTS.BE.RECONNECT, {game: params.game, player: params.player, state: PLAYER_CONST.STATE.CONNECTED});
             });
         } else if (!areStateParamsEqual && this.socket.hasConnection()) {
 

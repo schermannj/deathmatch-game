@@ -1,10 +1,10 @@
 import {CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router} from "@angular/router";
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs/Observable";
-import {STORAGE_KEYS, STATE_STATUS, PLAYER_STATE} from "../../util/config.util";
+import {STORAGE_KEYS, STATE_STATUS} from "../../util/config.util";
 import {Subscriber} from "rxjs";
 import {SocketService} from "../../services/socket.service";
-import {EVENTS} from '../../util/shared-util.adapter';
+import {EVENTS, PLAYER_CONST} from '../../util/shared-util.adapter';
 
 @Injectable()
 export class GameRoomActivateGuard implements CanActivate {
@@ -30,7 +30,11 @@ export class GameRoomActivateGuard implements CanActivate {
                         subscriber.next(true);
                         subscriber.complete();
                     })
-                    .emit(EVENTS.BE.RECONNECT, {game: params.game, player: params.player, state: PLAYER_STATE.STARTED});
+                    .emit(EVENTS.BE.RECONNECT, {
+                        game: params.game,
+                        player: params.player,
+                        state: PLAYER_CONST.STATE.STARTED
+                    });
             });
 
         } else if (gameState === STATE_STATUS.FINISHED) {

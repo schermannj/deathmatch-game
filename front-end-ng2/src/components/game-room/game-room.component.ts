@@ -20,8 +20,8 @@ import {MD_RADIO_DIRECTIVES} from "@angular2-material/radio";
 import {MdUniqueSelectionDispatcher} from "@angular2-material/core";
 import {AcceptAnswerModalComponent} from "./accept-answer/accept-answer.modal.component";
 import {GameOverModalComponent} from "./game-over/game-over.modal.component";
-import {STORAGE_KEYS, STATE_STATUS, PLAYER_START_SCORE} from "../../util/config.util";
-import {EVENTS} from '../../util/shared-util.adapter';
+import {STORAGE_KEYS, STATE_STATUS} from "../../util/config.util";
+import {EVENTS, PLAYER_CONST} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'game-room',
@@ -69,7 +69,7 @@ export class GameRoomComponent implements OnInit {
     }
 
     public getQuestionScoreProgress(): Number {
-        let progressValue = (this.currentQuestionScore * 100) / PLAYER_START_SCORE;
+        let progressValue = (this.currentQuestionScore * 100) / PLAYER_CONST.PLAYER_START_SCORE;
 
         return isNaN(progressValue) ? 0 : progressValue;
     }

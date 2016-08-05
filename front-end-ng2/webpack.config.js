@@ -21,7 +21,8 @@ module.exports = {
             path.resolve('../shared-util')
         ],
         alias: {
-            'event-constants': 'event.constants.js'
+            'event-constants': 'event.constants.js',
+            'player-constants': 'player.constants.js'
         },
         extensions: ['', '.js', '.ts']
     },

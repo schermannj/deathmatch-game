@@ -1,13 +1,14 @@
 //noinspection JSFileReferences
 import EVENTS from 'shared-util/event.constants.js';
+//noinspection JSFileReferences
+import PLAYER_CONST from 'shared-util/player.constants.js';
 import * as _ from 'lodash';
 import Game from '../models/Game';
 import Question from '../models/Question';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
-import {STATE, COUNTDOWN_COUNT, COUNTDOWN_DELAY} from "../config/constants";
+import {COUNTDOWN_COUNT, COUNTDOWN_DELAY} from "../config/constants";
 import * as log4js from 'log4js';
-import {PLAYER_START_SCORE} from "../config/constants";
 
 let self;
 export default class PlayerEventHandler {
@@ -37,11 +38,13 @@ export default class PlayerEventHandler {
         }
 
         // find player with specific id and game and update his ready status
-        Player.findOneAndUpdate({_id: data.player._id, game: data.game}, {$set: {state: STATE.READY}})
+        Player.findOneAndUpdate({_id: data.player._id, game: data.game}, {$set: {state: PLAYER_CONST.STATE.READY}})
             .then(() => {
 
                 // find all players from that game who isn't disconnected
-                return Player.find({game: data.game, $or: [{state: STATE.READY}, {state: STATE.CONNECTED}]});
+                return Player.find(
+                    {game: data.game, $or: [{state: PLAYER_CONST.STATE.READY}, {state: PLAYER_CONST.STATE.CONNECTED}]}
+                );
 
             }, ExceptionHandlerService.validate)
             .then((players) => {
@@ -70,8 +73,8 @@ export default class PlayerEventHandler {
             .then(() => {
                 // set players' states to 'STARTED'
                 return Player.update(
-                    {game: data.game, state: {$ne: STATE.DISCONNECTED}},
-                    {$set: {state: STATE.STARTED}},
+                    {game: data.game, state: {$ne: PLAYER_CONST.STATE.DISCONNECTED}},
+                    {$set: {state: PLAYER_CONST.STATE.STARTED}},
                     {multi: true}
                 );
             })
@@ -93,7 +96,7 @@ export default class PlayerEventHandler {
                             questions: gameQuestions,
                             currentQuestion: {
                                 id: firstQuestion,
-                                score: PLAYER_START_SCORE
+                                score: PLAYER_CONST.PLAYER_START_SCORE
                             }
                         }
                     },
@@ -130,15 +133,15 @@ export default class PlayerEventHandler {
         let score = self.psh.getScore(this.id);
 
         // set player's score to question state and update player
-        let setObj = {state: STATE.DISCONNECTED};
-        if(score) {
+        let setObj = {state: PLAYER_CONST.STATE.DISCONNECTED};
+        if (score) {
             setObj['currentQuestion.score'] = score;
         }
 
         // update disconnected player and set disconnect status to 'true'
         Player
             .findOneAndUpdate(
-                {socket: this.id, state: {$ne: STATE.FINISHED}},
+                {socket: this.id, state: {$ne: PLAYER_CONST.STATE.FINISHED}},
                 {$set: setObj},
                 {new: true}
             )
@@ -150,19 +153,19 @@ export default class PlayerEventHandler {
                 // }
 
                 // find all players who didn't leave the game
-                return Player.find({game: disconnectedPlayer.game, state: {$ne: STATE.DISCONNECTED}});
+                return Player.find({game: disconnectedPlayer.game, state: {$ne: PLAYER_CONST.STATE.DISCONNECTED}});
 
             }, ExceptionHandlerService.validate)
             .then((players) => {
                 // if game didn't start, then send event to wait-room, else to score-table-room
                 let didGameStart = _.find(players, (player) => {
-                    return player.state === STATE.STARTED || player.state === STATE.FINISHED;
+                    return player.state === PLAYER_CONST.STATE.STARTED || player.state === PLAYER_CONST.STATE.FINISHED;
                 });
 
                 if (didGameStart) {
                     // find finished players
                     let finishedPlayers = _.filter(players, (player) => {
-                        return player.state === STATE.FINISHED;
+                        return player.state === PLAYER_CONST.STATE.FINISHED;
                     });
 
                     // emit an event and update score table data for all finished players from this game
@@ -177,7 +180,7 @@ export default class PlayerEventHandler {
 
                     if (!isThereAdmin) {
                         return Player.findOneAndUpdate(
-                            {game: game, state: {$ne: STATE.DISCONNECTED}}, {$set: {isAdmin: true}}
+                            {game: game, state: {$ne: PLAYER_CONST.STATE.DISCONNECTED}}, {$set: {isAdmin: true}}
                         );
                     } else {
                         // if there are some players and game didn't start, send them an event and update room
@@ -204,7 +207,7 @@ export default class PlayerEventHandler {
 
         // find all connected players from this game
         Player
-            .find({game: data.game, state: {$ne: STATE.DISCONNECTED}})
+            .find({game: data.game, state: {$ne: PLAYER_CONST.STATE.DISCONNECTED}})
             .then((players) => {
 
                 let setObj = {socket: sock.id, state: data.state};

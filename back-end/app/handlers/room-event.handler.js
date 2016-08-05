@@ -1,10 +1,11 @@
 //noinspection JSFileReferences
 import EVENTS from 'shared-util/event.constants.js';
+//noinspection JSFileReferences
+import PLAYER_CONST from 'shared-util/player.constants.js';
 import * as _ from 'lodash';
 import Game from '../models/Game';
 import Player from '../models/Player';
 import ExceptionHandlerService from '../services/exception-handler.service';
-import {STATE} from '../config/constants';
 import * as log4js from 'log4js';
 
 let self;
@@ -46,7 +47,7 @@ export default class RoomEventHandler {
                     game: game._id,
                     isAdmin: true,
                     socket: sock.id,
-                    state: STATE.CONNECTED
+                    state: PLAYER_CONST.STATE.CONNECTED
                 }).save();
 
             }, ExceptionHandlerService.validate)
@@ -99,7 +100,7 @@ export default class RoomEventHandler {
                     name: data.username,
                     game: data.game,
                     socket: sock.id,
-                    state: STATE.CONNECTED
+                    state: PLAYER_CONST.STATE.CONNECTED
                 }).save();
             })
             .then((player) => {
@@ -125,7 +126,7 @@ export default class RoomEventHandler {
         let sock = this;
 
         // find all players who belongs to this game
-        Player.find({game: data.game, state: {$ne: STATE.DISCONNECTED}})
+        Player.find({game: data.game, state: {$ne: PLAYER_CONST.STATE.DISCONNECTED}})
             .then((players) => {
 
                 // send event to all players from this game
@@ -154,7 +155,7 @@ export default class RoomEventHandler {
 
                 // find players who finished the game or disconnected players
                 let finishedPlayers = _.filter(players, (player) => {
-                    return player.state === STATE.FINISHED || player.state === STATE.DISCONNECTED;
+                    return player.state === PLAYER_CONST.STATE.FINISHED || player.state === PLAYER_CONST.STATE.DISCONNECTED;
                 });
 
                 //collect score table data

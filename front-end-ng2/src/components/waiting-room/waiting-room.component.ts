@@ -16,7 +16,7 @@ import {MD_BUTTON_DIRECTIVES} from "@angular2-material/button";
 import {parse} from "url";
 import {CountdownTimerComponent} from "../countdown-timer/countdown-timer.component";
 import {STATE_STATUS, STORAGE_KEYS} from "../../util/config.util";
-import {EVENTS} from '../../util/shared-util.adapter';
+import {EVENTS, PLAYER_CONST} from '../../util/shared-util.adapter';
 
 @Component({
     selector: 'waiting-room',
@@ -109,7 +109,7 @@ export class WaitingRoomComponent {
     }
 
     private checkIfAllPlayersAreReady() {
-        let allAreReady = _.filter(this.players, (player: IPlayer) => player.state === 'CONNECTED').length == 0;
+        let allAreReady = _.filter(this.players, (player: IPlayer) => player.state === PLAYER_CONST.STATE.CONNECTED).length == 0;
 
         if (allAreReady) {
             this.socket.io().emit(EVENTS.BE.ALL_PLAYERS_ARE_READY, {game: this.game});

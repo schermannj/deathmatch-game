@@ -1,10 +1,12 @@
 //noinspection JSFileReferences
 import EVENTS from 'shared-util/event.constants.js';
+//noinspection JSFileReferences
+import PLAYER_CONST from 'shared-util/player.constants.js';
 import * as _ from "lodash";
 import Question from "../models/Question";
 import Player from "../models/Player";
 import ExceptionHandlerService from "../services/exception-handler.service";
-import {STATE, SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY, PLAYER_START_SCORE} from "../config/constants";
+import {SCORE_MIN_DEGREE, SCORE_COUNTDOWN_DELAY} from "../config/constants";
 import * as log4js from "log4js";
 
 let self;
@@ -128,11 +130,11 @@ export default class QuestionEventHandler {
                     let nextQuestion = player.questions.shift();
 
                     updateDocument['$set'] = {
-                        currentQuestion: {id: nextQuestion, score: PLAYER_START_SCORE},
+                        currentQuestion: {id: nextQuestion, score: PLAYER_CONST.PLAYER_START_SCORE},
                         questions: player.questions
                     };
                 } else {
-                    updateDocument['$set'] = {state: STATE.FINISHED};
+                    updateDocument['$set'] = {state: PLAYER_CONST.STATE.FINISHED};
                 }
 
                 // update player info and return updated document

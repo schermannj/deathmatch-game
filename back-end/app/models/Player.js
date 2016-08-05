@@ -1,5 +1,7 @@
+//noinspection JSFileReferences
+import PLAYER_CONST from 'shared-util/player.constants.js';
 import mongoose from "../components/mongoose";
-import {ID_MIXIN, PLAYER_START_SCORE} from "../config/constants";
+import {ID_MIXIN} from "../config/constants";
 import uuid from "uuid";
 
 const Schema = mongoose.Schema;
@@ -52,7 +54,7 @@ const PlayerSchema = new Schema({
         },
         score: {
             type: Number,
-            default: PLAYER_START_SCORE
+            default: PLAYER_CONST.PLAYER_START_SCORE
         }
     }
 });
